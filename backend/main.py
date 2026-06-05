@@ -12,29 +12,61 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class Task(BaseModel):
+    type: str
     title: str
     contact: str
+    company: str
+    time: str
     completed: bool = False
 
+
 fake_tasks_db = [
-    {"id": 1, "title": "Send intro email", "contact": "Sarah Diaz", "completed": False},
-    {"id": 2, "title": "Phone call follow-up", "contact": "Alex Rivera", "completed": True},
-    {"id": 3, "title": "LinkedIn connection request", "contact": "Matt Zhang", "completed": False}
+    {
+        "id": 1,
+        "type": "email",
+        "title": "Send intro email",
+        "contact": "Sarah Chen",
+        "company": "Notion",
+        "time": "9:00 AM",
+        "completed": False,
+    },
+    {
+        "id": 2,
+        "type": "linkedin",
+        "title": "Check LinkedIn reply",
+        "contact": "Marcus Webb",
+        "company": "Stripe",
+        "time": "10:30 AM",
+        "completed": True,
+    },
+    {
+        "id": 3,
+        "type": "follow-up",
+        "title": "Follow-up on proposal",
+        "contact": "Priya Nair",
+        "company": "Linear",
+        "time": "12:00 PM",
+        "completed": False,
+    }
 ]
+
 
 @app.get("/api/tasks")
 def get_tasks():
     return fake_tasks_db
+
 
 @app.post("/api/tasks")
 def create_task(task: Task):
     task_dict = task.dict()
     new_id = max([t["id"] for t in fake_tasks_db]) + 1 if fake_tasks_db else 1
     task_dict["id"] = new_id
-    
+
     fake_tasks_db.append(task_dict)
     return {"message": "Task created successfully", "task": task_dict}
+
 
 @app.put("/api/tasks/{task_id}")
 def toggle_task_status(task_id: int):
