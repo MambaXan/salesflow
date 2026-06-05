@@ -189,6 +189,17 @@ export default function App() {
       .catch(error => console.error("Error toggling task:", error));
   };
 
+  const deleteTask = (id: number) => {
+    fetch(`http://127.0.0.1:8000/api/tasks/${id}`, {
+      method: "DELETE",
+    }) 
+    .then(response => response.json())
+    .then(() => {
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+    })
+    .catch(error => console.error("Error deleting task:" error))
+  }
+
   const openModal = useCallback(() => {
     setModalOpen(true);
     setMenuOpen(false);

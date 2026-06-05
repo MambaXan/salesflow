@@ -75,3 +75,16 @@ def toggle_task_status(task_id: int):
             task["completed"] = not task["completed"]
             return {"message": "Task status updated", "task": task}
     return {"error": "Task not found"}
+
+@app.delete("/api/tasks/{task_id}")
+def delete_task(task_id: int):
+    global fake_tasks_db
+
+    task_exists = any(task["id"] == task_id for task in fake_tasks_db)
+
+    if not task_exists:
+        return {"error": "Task not found"}
+    
+    fake_tasks_db = [task for task in fake_tasks_db if task["id"] != task_id]
+
+    return {"message": f"Task {task_id} deleted successfully"}
