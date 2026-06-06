@@ -85,7 +85,9 @@ function BetaModal({ onClose }: BetaModalProps) {
         setTimeout(() => onClose(), 3500);
       } else {
         const data = await res.json().catch(() => ({}));
-        setErrorMsg((data as any)?.error ?? "Something went wrong. Please try again.");
+        setErrorMsg(
+          (data as any)?.error ?? "Something went wrong. Please try again."
+        );
         setSubmitState("error");
       }
     } catch {
@@ -115,13 +117,17 @@ function BetaModal({ onClose }: BetaModalProps) {
         {submitState === "success" ? (
           <div className="modal__success">
             <span className="modal__success-icon">🎉</span>
-            <span>Thanks! You're on the list. We'll reach out to you next week.</span>
+            <span>
+              Thanks! You're on the list. We'll reach out to you next week.
+            </span>
           </div>
         ) : (
           <>
             <div className="modal__input-row">
               <input
-                className={`modal__input${submitState === "error" ? " modal__input--error" : ""}`}
+                className={`modal__input${
+                  submitState === "error" ? " modal__input--error" : ""
+                }`}
                 type="email"
                 placeholder="you@company.com"
                 value={email}
@@ -130,7 +136,9 @@ function BetaModal({ onClose }: BetaModalProps) {
                   setErrorMsg("");
                   setSubmitState("idle");
                 }}
-                onKeyDown={(e) => e.key === "Enter" && !isLoading && handleSubmit()}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && !isLoading && handleSubmit()
+                }
                 disabled={isLoading}
                 autoFocus
               />
@@ -139,7 +147,11 @@ function BetaModal({ onClose }: BetaModalProps) {
                 onClick={handleSubmit}
                 disabled={isLoading}
               >
-                {isLoading ? <span className="btn__spinner" /> : "Get Early Access"}
+                {isLoading ? (
+                  <span className="btn__spinner" />
+                ) : (
+                  "Get Early Access"
+                )}
               </button>
             </div>
             {errorMsg ? (
@@ -159,18 +171,18 @@ function BetaModal({ onClose }: BetaModalProps) {
 export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  
+
   // 1. Создаем стейт для тасков ВНУТРИ компонента App
   const [tasks, setTasks] = useState<Task[]>([]);
 
   // 2. Загружаем данные с бэкенда при старте
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/tasks")
-      .then(response => response.json())
+      .then((response) => response.json())
       .then((data: Task[]) => {
         setTasks(data);
       })
-      .catch(error => console.error("Error fetching tasks:", error));
+      .catch((error) => console.error("Error fetching tasks:", error));
   }, []);
 
   // 3. Функция клика на "Done" — переключает статус на бэке и на фронте
@@ -178,27 +190,27 @@ export default function App() {
     fetch(`http://127.0.0.1:8000/api/tasks/${id}`, {
       method: "PUT",
     })
-      .then(response => response.json())
+      .then((response) => response.json())
       .then(() => {
-        setTasks(prevTasks =>
-          prevTasks.map(task =>
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
             task.id === id ? { ...task, completed: !task.completed } : task
           )
         );
       })
-      .catch(error => console.error("Error toggling task:", error));
+      .catch((error) => console.error("Error toggling task:", error));
   };
 
   const deleteTask = (id: number) => {
     fetch(`http://127.0.0.1:8000/api/tasks/${id}`, {
       method: "DELETE",
-    }) 
-    .then(response => response.json())
-    .then(() => {
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
     })
-    .catch(error => console.error("Error deleting task:" error))
-  }
+      .then((response) => response.json())
+      .then(() => {
+        setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
+      })
+      .catch((error) => console.error("Error deleting task:", error));
+  };
 
   const openModal = useCallback(() => {
     setModalOpen(true);
@@ -214,8 +226,9 @@ export default function App() {
   }, [modalOpen]);
 
   // Считаем выполненные задачи для прогресс-бара
-  const completedCount = tasks.filter(t => t.completed).length;
-  const progressPercentage = tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
+  const completedCount = tasks.filter((t) => t.completed).length;
+  const progressPercentage =
+    tasks.length > 0 ? (completedCount / tasks.length) * 100 : 0;
 
   return (
     <div className="app">
@@ -226,7 +239,9 @@ export default function App() {
           <span className="mobile-bar__logo-text">Salesflow</span>
         </div>
         <button
-          className={`mobile-bar__hamburger${menuOpen ? " mobile-bar__hamburger--open" : ""}`}
+          className={`mobile-bar__hamburger${
+            menuOpen ? " mobile-bar__hamburger--open" : ""
+          }`}
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle menu"
         >
@@ -238,17 +253,24 @@ export default function App() {
 
       {/* ── Mobile drawer ───────────────────────────────────── */}
       {menuOpen && (
-        <div className="mobile-drawer-overlay" onClick={() => setMenuOpen(false)}>
+        <div
+          className="mobile-drawer-overlay"
+          onClick={() => setMenuOpen(false)}
+        >
           <nav className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.label}
-                className={`mobile-drawer__item${item.active ? " mobile-drawer__item--active" : ""}`}
+                className={`mobile-drawer__item${
+                  item.active ? " mobile-drawer__item--active" : ""
+                }`}
                 onClick={item.active ? () => setMenuOpen(false) : openModal}
               >
                 <span className="mobile-drawer__icon">{item.icon}</span>
                 <span>{item.label}</span>
-                {!item.active && <span className="mobile-drawer__lock">🔒</span>}
+                {!item.active && (
+                  <span className="mobile-drawer__lock">🔒</span>
+                )}
               </button>
             ))}
           </nav>
@@ -265,7 +287,9 @@ export default function App() {
           {NAV_ITEMS.map((item) => (
             <button
               key={item.label}
-              className={`sidebar__nav-item${item.active ? " sidebar__nav-item--active" : ""}`}
+              className={`sidebar__nav-item${
+                item.active ? " sidebar__nav-item--active" : ""
+              }`}
               onClick={item.active ? undefined : openModal}
             >
               <span className="sidebar__nav-icon">{item.icon}</span>
@@ -322,11 +346,18 @@ export default function App() {
             { label: "Emails sent", value: "3", sub: "today" },
             { label: "Replies", value: "1", sub: "pending" },
             { label: "Time spent", value: "2.4h", sub: "on outreach" },
-            { label: "Time saved*", value: "—", sub: "with Salesflow AI", highlight: true },
+            {
+              label: "Time saved*",
+              value: "—",
+              sub: "with Salesflow AI",
+              highlight: true,
+            },
           ].map((s) => (
             <button
               key={s.label}
-              className={`stat-card${s.highlight ? " stat-card--highlight" : ""}`}
+              className={`stat-card${
+                s.highlight ? " stat-card--highlight" : ""
+              }`}
               onClick={openModal}
             >
               <span className="stat-card__value">{s.value}</span>
@@ -340,29 +371,47 @@ export default function App() {
         <section className="task-section">
           <div className="task-section__header">
             <h2 className="task-section__title">Manual outreach queue</h2>
-            <span className="task-section__hint">✦ Click any action to unlock automation</span>
+            <span className="task-section__hint">
+              ✦ Click any action to unlock automation
+            </span>
           </div>
           <ul className="task-list">
             {/* Рендерим задачи из динамического стейта tasks */}
             {tasks.map((task, i) => (
               <li
                 key={task.id}
-                className={`task-item${task.completed ? " task-item--completed" : ""}`} // добавляем класс, если выполнено
-                style={{ animationDelay: `${i * 55}ms`, opacity: task.completed ? 0.6 : 1 }}
+                className={`task-item${
+                  task.completed ? " task-item--completed" : ""
+                }`} // добавляем класс, если выполнено
+                style={{
+                  animationDelay: `${i * 55}ms`,
+                  opacity: task.completed ? 0.6 : 1,
+                }}
               >
-                <div className={`task-item__type task-item__type--${task.type}`}>
+                <div
+                  className={`task-item__type task-item__type--${task.type}`}
+                >
                   <span>{TYPE_ICON[task.type]}</span>
                 </div>
                 <div className="task-item__body">
-                  <div className="task-item__title" style={{ textDecoration: task.completed ? "line-through" : "none" }}>
+                  <div
+                    className="task-item__title"
+                    style={{
+                      textDecoration: task.completed ? "line-through" : "none",
+                    }}
+                  >
                     {task.title}
                   </div>
                   <div className="task-item__meta">
                     <span className="task-item__contact">{task.contact}</span>
                     <span className="task-item__sep">·</span>
                     <span className="task-item__company">{task.company}</span>
-                    <span className="task-item__sep task-item__sep--hide-mobile">·</span>
-                    <span className="task-item__tag task-item__tag--hide-mobile">{TYPE_LABEL[task.type]}</span>
+                    <span className="task-item__sep task-item__sep--hide-mobile">
+                      ·
+                    </span>
+                    <span className="task-item__tag task-item__tag--hide-mobile">
+                      {TYPE_LABEL[task.type]}
+                    </span>
                   </div>
                 </div>
                 <div className="task-item__time">{task.time}</div>
@@ -370,12 +419,20 @@ export default function App() {
                   <button className="btn btn--ghost" onClick={openModal}>
                     Copy Template
                   </button>
-                  {/* Кнопка Done теперь вызывает функцию тогла статуса на бэкенде */}
-                  <button 
-                    className={`btn ${task.completed ? "btn--ghost" : "btn--primary"}`} 
+                  <button
+                    className={`btn ${
+                      task.completed ? "btn--ghost" : "btn--primary"
+                    }`}
                     onClick={() => toggleTask(task.id)}
                   >
                     {task.completed ? "Undo" : "Done"}
+                  </button>
+                  <button
+                    className="btn btn--ghost"
+                    style={{ color: "#ff4d4f", marginLeft: "8px" }}
+                    onClick={() => deleteTask(task.id)}
+                  >
+                    ✕
                   </button>
                 </div>
               </li>
