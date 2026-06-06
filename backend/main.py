@@ -21,6 +21,13 @@ class Task(BaseModel):
     time: str
     completed: bool = False
 
+class TaskCreate(BaseModel):
+    type: str
+    title: str
+    contact: str
+    company: str
+    time: str
+
 
 fake_tasks_db = [
     {
