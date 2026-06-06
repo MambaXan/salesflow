@@ -1,100 +1,3 @@
-# from fastapi import FastAPI
-# from fastapi.middleware.cors import CORSMiddleware
-# from pydantic import BaseModel
-
-# app = FastAPI(title="SalesFlow API")
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-
-# class Task(BaseModel):
-#     type: str
-#     title: str
-#     contact: str
-#     company: str
-#     time: str
-#     completed: bool = False
-
-# class TaskCreate(BaseModel):
-#     type: str
-#     title: str
-#     contact: str
-#     company: str
-#     time: str
-
-
-# fake_tasks_db = [
-#     {
-#         "id": 1,
-#         "type": "email",
-#         "title": "Send intro email",
-#         "contact": "Sarah Chen",
-#         "company": "Notion",
-#         "time": "9:00 AM",
-#         "completed": False,
-#     },
-#     {
-#         "id": 2,
-#         "type": "linkedin",
-#         "title": "Check LinkedIn reply",
-#         "contact": "Marcus Webb",
-#         "company": "Stripe",
-#         "time": "10:30 AM",
-#         "completed": True,
-#     },
-#     {
-#         "id": 3,
-#         "type": "follow-up",
-#         "title": "Follow-up on proposal",
-#         "contact": "Priya Nair",
-#         "company": "Linear",
-#         "time": "12:00 PM",
-#         "completed": False,
-#     }
-# ]
-
-
-# @app.get("/api/tasks")
-# def get_tasks():
-#     return fake_tasks_db
-
-
-# @app.post("/api/tasks")
-# def create_task(task: Task):
-#     task_dict = task.dict()
-#     new_id = max([t["id"] for t in fake_tasks_db]) + 1 if fake_tasks_db else 1
-#     task_dict["id"] = new_id
-
-#     fake_tasks_db.append(task_dict)
-#     return {"message": "Task created successfully", "task": task_dict}
-
-
-# @app.put("/api/tasks/{task_id}")
-# def toggle_task_status(task_id: int):
-#     for task in fake_tasks_db:
-#         if task["id"] == task_id:
-#             task["completed"] = not task["completed"]
-#             return {"message": "Task status updated", "task": task}
-#     return {"error": "Task not found"}
-
-# @app.delete("/api/tasks/{task_id}")
-# def delete_task(task_id: int):
-#     global fake_tasks_db
-
-#     task_exists = any(task["id"] == task_id for task in fake_tasks_db)
-
-#     if not task_exists:
-#         return {"error": "Task not found"}
-
-#     fake_tasks_db = [task for task in fake_tasks_db if task["id"] != task_id]
-
-#     return {"message": f"Task {task_id} deleted successfully"}
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -120,7 +23,6 @@ def get_db():
 
 class DBTask(Base):
     __tablename__ = "tasks"
-
     id = Column(Integer, primary_key=True, index=True)
     type = Column(String, index=True)
     title = Column(String)
@@ -128,6 +30,25 @@ class DBTask(Base):
     company = Column(String)
     time = Column(String)
     completed = Column(Boolean, default=False)
+
+
+class DBContact(Base):
+    __tablename__ = "contacts"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    company = Column(String)
+    email = Column(String)
+    status = Column(String, default="Active")
+
+
+class DBDeal(Base):
+    __tablename__ = "deals"
+    id = Column(Integer, primary_key=True, index=True)
+    contact_name = Column(String)
+    company = Column(String)
+    value = Column(String)
+    date = Column(String)
+    status = Column(String, default="Lead")
 
 
 Base.metadata.create_all(bind=engine)
@@ -153,6 +74,47 @@ class TaskResponse(TaskBase):
         from_attributes = True
 
 
+class ContactBase(BaseModel):
+    name: str
+    company: str
+    email: str
+    status: str
+
+
+class ContactCreate(ContactBase):
+    pass
+
+
+class ContactResponse(ContactBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class DealBase(BaseModel):
+    contact_name: str
+    company: str
+    value: str
+    date: str
+    status: str
+
+
+class DealCreate(DealBase):
+    pass
+
+
+class DealUpdateStatus(BaseModel):
+    status: str
+
+
+class DealResponse(DealBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
 app = FastAPI(title="SalesFlow API")
 
 app.add_middleware(
@@ -171,14 +133,7 @@ def get_tasks(db: Session = Depends(get_db)):
 
 @app.post("/api/tasks")
 def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
-    db_task = DBTask(
-        type=task_data.type,
-        title=task_data.title,
-        contact=task_data.contact,
-        company=task_data.company,
-        time=task_data.time,
-        completed=False
-    )
+    db_task = DBTask(**task_data.dict(), completed=False)
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -190,11 +145,9 @@ def toggle_task_status(task_id: int, db: Session = Depends(get_db)):
     db_task = db.query(DBTask).filter(DBTask.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
-
     db_task.completed = not db_task.completed
     db.commit()
-    db.refresh(db_task)
-    return {"message": "Task status updated", "task": db_task}
+    return {"message": "Status updated", "task": db_task}
 
 
 @app.delete("/api/tasks/{task_id}")
@@ -202,7 +155,54 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db_task = db.query(DBTask).filter(DBTask.id == task_id).first()
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
-
     db.delete(db_task)
     db.commit()
-    return {"message": f"Task {task_id} deleted successfully"}
+    return {"message": "Deleted successfully"}
+
+
+@app.get("/api/contacts", response_model=List[ContactResponse])
+def get_contacts(db: Session = Depends(get_db)):
+    return db.query(DBContact).all()
+
+
+@app.post("/api/contacts")
+def create_contact(contact_data: ContactCreate, db: Session = Depends(get_db)):
+    db_contact = DBContact(**contact_data.dict())
+    db.add(db_contact)
+    db.commit()
+    db.refresh(db_contact)
+    return {"message": "Contact created successfully", "contact": db_contact}
+
+
+@app.delete("/api/contacts/{contact_id}")
+def delete_contact(contact_id: int, db: Session = Depends(get_db)):
+    db_contact = db.query(DBContact).filter(DBContact.id == contact_id).first()
+    if not db_contact:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    db.delete(db_contact)
+    db.commit()
+    return {"message": "Contact deleted"}
+
+
+@app.get("/api/deals", response_model=List[DealResponse])
+def get_deals(db: Session = Depends(get_db)):
+    return db.query(DBDeal).all()
+
+
+@app.post("/api/deals")
+def create_deal(deal_data: DealCreate, db: Session = Depends(get_db)):
+    db_deal = DBDeal(**deal_data.dict())
+    db.add(db_deal)
+    db.commit()
+    db.refresh(db_deal)
+    return {"message": "Deal created successfully", "deal": db_deal}
+
+
+@app.put("/api/deals/{deal_id}/status")
+def update_deal_status(deal_id: int, status_data: DealUpdateStatus, db: Session = Depends(get_db)):
+    db_deal = db.query(DBDeal).filter(DBDeal.id == deal_id).first()
+    if not db_deal:
+        raise HTTPException(status_code=404, detail="Deal not found")
+    db_deal.status = status_data.status
+    db.commit()
+    return {"message": "Deal status updated", "deal": db_deal}
