@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 type ContactStatus = "Active" | "Replied" | "No Answer";
 
@@ -16,24 +16,22 @@ const STATUS_STYLE: Record<ContactStatus, { bg: string; color: string }> = {
   "No Answer": { bg: "#f5f5f3", color: "#6b6b66" },
 };
 
-const INITIAL_CONTACTS: Contact[] = [
-  { id: 1, name: "Sarah Chen",    company: "Notion",    email: "schen@notion.so",       status: "Active" },
-  { id: 2, name: "James Ford",    company: "Linear",    email: "j.ford@linear.app",      status: "Replied" },
-  { id: 3, name: "Maria Rossi",   company: "Figma",     email: "m.rossi@figma.com",      status: "Active" },
-  { id: 4, name: "Kevin Park",    company: "Vercel",    email: "kevin@vercel.com",        status: "No Answer" },
-  { id: 5, name: "Anya Patel",    company: "Stripe",    email: "a.patel@stripe.com",     status: "Replied" },
-  { id: 6, name: "Tom Nakamura",  company: "Supabase",  email: "tom@supabase.io",         status: "Active" },
-  { id: 7, name: "Elena Volkova", company: "Loom",      email: "e.volkova@loom.com",     status: "No Answer" },
-];
-
+const API = "http://127.0.0.1:8000/api/contacts";
 const EMPTY = { name: "", company: "", email: "" };
 
 export default function Contacts() {
-  const [contacts, setContacts] = useState<Contact[]>(INITIAL_CONTACTS);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetch(API)
+      .then((r) => r.json())
+      .then((data: Contact[]) => setContacts(data))
+      .catch((e) => console.error("Error fetching contacts:", e));
+  }, []);
 
   const filtered = contacts.filter((c) => {
     const q = search.toLowerCase();
@@ -49,7 +47,7 @@ export default function Contacts() {
     setError("");
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name.trim() || !form.company.trim() || !form.email.trim()) {
       setError("All fields are required.");
       return;
@@ -57,17 +55,32 @@ export default function Contacts() {
     const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
     if (!valid) { setError("Enter a valid email."); return; }
 
-    setContacts((prev) => [
-      ...prev,
-      { id: Date.now(), name: form.name.trim(), company: form.company.trim(), email: form.email.trim(), status: "Active" },
-    ]);
-    setForm(EMPTY);
-    setShowForm(false);
-    setError("");
+    try {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          company: form.company.trim(),
+          email: form.email.trim(),
+          status: "Active",
+        }),
+      });
+      const data = await res.json();
+      setContacts((prev) => [...prev, data.contact]);
+      setForm(EMPTY);
+      setShowForm(false);
+      setError("");
+    } catch (e) {
+      console.error("Error adding contact:", e);
+      setError("Failed to save. Check your connection.");
+    }
   };
 
   const handleDelete = (id: number) => {
-    setContacts((prev) => prev.filter((c) => c.id !== id));
+    fetch(`${API}/${id}`, { method: "DELETE" })
+      .then(() => setContacts((prev) => prev.filter((c) => c.id !== id)))
+      .catch((e) => console.error("Error deleting contact:", e));
   };
 
   const cycleStatus = (id: number) => {
@@ -98,7 +111,7 @@ export default function Contacts() {
           <button
             className="btn btn--primary"
             style={{ fontSize: "13px", padding: "7px 14px" }}
-            onClick={() => { setShowForm((v) => !v); setError(""); }}
+            onClick={() => { setShowForm((v) => !v); setError(""); setForm(EMPTY); }}
           >
             {showForm ? "✕ Cancel" : "+ Add Contact"}
           </button>
@@ -109,7 +122,8 @@ export default function Contacts() {
         <div className="contacts-form">
           <input name="name"    placeholder="Full name *"   value={form.name}    onChange={handleChange} className="contacts-form__input" />
           <input name="company" placeholder="Company *"     value={form.company} onChange={handleChange} className="contacts-form__input" />
-          <input name="email"   placeholder="Email *"       value={form.email}   onChange={handleChange} className="contacts-form__input" type="email" />
+          <input name="email"   placeholder="Email *"       value={form.email}   onChange={handleChange} className="contacts-form__input" type="email"
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()} />
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <button className="btn btn--primary" onClick={handleAdd}>Add</button>
             {error && <span className="contacts-form__error">⚠ {error}</span>}

@@ -70,6 +70,10 @@ export default function Dashboard() {
       .then((data) => {
         if (data.task) {
           setTasks((prevTasks) => [...prevTasks, data.task]);
+
+          // 👑 ЧИНЯЩИЙ МУВ: очищаем форму и закрываем её
+          setForm(EMPTY_FORM);
+          setShowForm(false);
         }
       })
       .catch((error) => console.error("Error adding task:", error));
@@ -230,7 +234,7 @@ export default function Dashboard() {
                 className={`btn btn--primary${
                   submitting ? " btn--loading" : ""
                 }`}
-                onClick={handleAddTask}
+                onClick={() => handleAddTask(form)}
                 disabled={submitting}
               >
                 {submitting ? <span className="btn__spinner" /> : "Add Task"}

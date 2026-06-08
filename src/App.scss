@@ -1,43 +1,49 @@
 // ─── Design Tokens ───────────────────────────────────────────────────────────
 
-$bg:            #f5f5f3;
-$surface:       #ffffff;
-$surface-2:     #fafaf8;
-$border:        #ebebea;
-$text-primary:  #1a1a18;
-$text-secondary:#6b6b66;
-$text-muted:    #a8a8a2;
-$accent:        #2563eb;
-$accent-light:  #eff4ff;
-$accent-hover:  #1d4ed8;
-$success:       #16a34a;
-$warning:       #d97706;
+$bg: #f5f5f3;
+$surface: #ffffff;
+$surface-2: #fafaf8;
+$border: #ebebea;
+$text-primary: #1a1a18;
+$text-secondary: #6b6b66;
+$text-muted: #a8a8a2;
+$accent: #2563eb;
+$accent-light: #eff4ff;
+$accent-hover: #1d4ed8;
+$success: #16a34a;
+$warning: #d97706;
 
-$radius-sm:     8px;
-$radius-md:     14px;
-$radius-lg:     20px;
-$radius-xl:     28px;
+$radius-sm: 8px;
+$radius-md: 14px;
+$radius-lg: 20px;
+$radius-xl: 28px;
 
-$shadow-sm:     0 1px 3px rgba(0,0,0,.05), 0 1px 2px rgba(0,0,0,.04);
-$shadow-md:     0 4px 16px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04);
-$shadow-lg:     0 12px 40px rgba(0,0,0,.10), 0 4px 12px rgba(0,0,0,.05);
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04);
+$shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.05);
 
-$font-display:  'DM Serif Display', Georgia, serif;
-$font-body:     'DM Sans', 'Helvetica Neue', sans-serif;
+$font-display: "DM Serif Display", Georgia, serif;
+$font-body: "DM Sans", "Helvetica Neue", sans-serif;
 
 // ─── Breakpoints ─────────────────────────────────────────────────────────────
 
-$bp-mobile:  480px;
-$bp-tablet:  768px;
+$bp-mobile: 480px;
+$bp-tablet: 768px;
 $bp-desktop: 1024px;
 
 // ─── Google Fonts ─────────────────────────────────────────────────────────────
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap");
 
 // ─── Reset & Base ─────────────────────────────────────────────────────────────
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 body {
   font-family: $font-body;
@@ -122,11 +128,19 @@ body {
       transition: transform 0.2s, opacity 0.2s;
     }
 
-    &:hover { background: $bg; }
+    &:hover {
+      background: $bg;
+    }
 
-    &--open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
-    &--open span:nth-child(2) { opacity: 0; }
-    &--open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+    &--open span:nth-child(1) {
+      transform: translateY(6.5px) rotate(45deg);
+    }
+    &--open span:nth-child(2) {
+      opacity: 0;
+    }
+    &--open span:nth-child(3) {
+      transform: translateY(-6.5px) rotate(-45deg);
+    }
   }
 }
 
@@ -139,15 +153,21 @@ body {
     display: block;
     position: fixed;
     inset: 56px 0 0 0;
-    background: rgba(10,10,10,.3);
+    background: rgba(10, 10, 10, 0.3);
     backdrop-filter: blur(2px);
     z-index: 40;
   }
 }
 
 @keyframes drawerIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .mobile-drawer {
@@ -175,18 +195,32 @@ body {
     text-align: left;
     transition: background 0.15s, color 0.15s;
 
-    &:hover { background: $bg; color: $text-primary; }
+    &:hover {
+      background: $bg;
+      color: $text-primary;
+    }
 
     &--active {
       background: $accent-light;
       color: $accent;
-      &:hover { background: $accent-light; color: $accent; }
+      &:hover {
+        background: $accent-light;
+        color: $accent;
+      }
     }
   }
 
-  &__icon { font-size: 14px; width: 18px; text-align: center; }
+  &__icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+  }
 
-  &__lock { font-size: 10px; opacity: 0.4; margin-left: auto; }
+  &__lock {
+    font-size: 10px;
+    opacity: 0.4;
+    margin-left: auto;
+  }
 }
 
 // ─── Sidebar (desktop only) ───────────────────────────────────────────────────
@@ -203,7 +237,9 @@ body {
   top: 0;
   height: 100vh;
 
-  @media (max-width: $bp-tablet) { display: none; }
+  @media (max-width: $bp-tablet) {
+    display: none;
+  }
 
   &__logo {
     display: flex;
@@ -257,18 +293,34 @@ body {
     text-align: left;
     width: 100%;
 
-    &:hover { background: $bg; color: $text-primary; }
+    &:hover {
+      background: $bg;
+      color: $text-primary;
+    }
 
     &--active {
       background: $accent-light;
       color: $accent;
-      &:hover { background: $accent-light; color: $accent; }
+      &:hover {
+        background: $accent-light;
+        color: $accent;
+      }
     }
   }
 
-  &__nav-icon { font-size: 14px; width: 18px; text-align: center; }
-  &__nav-label { flex: 1; }
-  &__nav-lock { font-size: 10px; opacity: 0.4; margin-left: auto; }
+  &__nav-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+  }
+  &__nav-label {
+    flex: 1;
+  }
+  &__nav-lock {
+    font-size: 10px;
+    opacity: 0.4;
+    margin-left: auto;
+  }
 
   &__footer {
     display: flex;
@@ -292,9 +344,20 @@ body {
     flex-shrink: 0;
   }
 
-  &__user { display: flex; flex-direction: column; gap: 1px; }
-  &__user-name  { font-size: 13px; font-weight: 500; color: $text-primary; }
-  &__user-role  { font-size: 11.5px; color: $text-muted; }
+  &__user {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  &__user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-primary;
+  }
+  &__user-role {
+    font-size: 11.5px;
+    color: $text-muted;
+  }
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -344,15 +407,21 @@ body {
     letter-spacing: -0.5px;
     color: $text-primary;
 
-    @media (max-width: $bp-tablet) { font-size: 24px; }
-    @media (max-width: $bp-mobile) { font-size: 22px; }
+    @media (max-width: $bp-tablet) {
+      font-size: 24px;
+    }
+    @media (max-width: $bp-mobile) {
+      font-size: 22px;
+    }
   }
 
   &__date {
     font-size: 13px;
     color: $text-muted;
 
-    @media (max-width: $bp-mobile) { font-size: 12px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 12px;
+    }
   }
 
   &__right {
@@ -375,7 +444,11 @@ body {
     gap: 6px;
   }
 
-  &__progress-label { font-size: 12px; color: $text-secondary; font-weight: 500; }
+  &__progress-label {
+    font-size: 12px;
+    color: $text-secondary;
+    font-weight: 500;
+  }
 
   &__progress-bar {
     width: 120px;
@@ -384,14 +457,16 @@ body {
     border-radius: 99px;
     overflow: hidden;
 
-    @media (max-width: $bp-mobile) { width: 80px; }
+    @media (max-width: $bp-mobile) {
+      width: 80px;
+    }
   }
 
   &__progress-fill {
     height: 100%;
     background: $accent;
     border-radius: 99px;
-    transition: width 0.5s cubic-bezier(0.4,0,.2,1);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   &__badge {
@@ -408,7 +483,10 @@ body {
     box-shadow: $shadow-sm;
     white-space: nowrap;
 
-    @media (max-width: $bp-mobile) { padding: 4px 10px; font-size: 11px; }
+    @media (max-width: $bp-mobile) {
+      padding: 4px 10px;
+      font-size: 11px;
+    }
   }
 
   &__badge-dot {
@@ -427,8 +505,14 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
 
-  @media (max-width: $bp-tablet)  { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  @media (max-width: $bp-mobile)  { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (max-width: $bp-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: $bp-mobile) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 }
 
 .stat-card {
@@ -449,17 +533,31 @@ body {
     box-shadow: $shadow-md;
     transform: translateY(-1px);
   }
-  &:active { transform: scale(0.98); }
+  &:active {
+    transform: scale(0.98);
+  }
 
-  @media (max-width: $bp-tablet)  { padding: 14px 16px; }
-  @media (max-width: $bp-mobile)  { padding: 12px 14px; border-radius: $radius-sm; }
+  @media (max-width: $bp-tablet) {
+    padding: 14px 16px;
+  }
+  @media (max-width: $bp-mobile) {
+    padding: 12px 14px;
+    border-radius: $radius-sm;
+  }
 
   &--highlight {
     background: $accent-light;
     border-color: lighten($accent, 30%);
-    .stat-card__value { color: $accent; }
-    .stat-card__label { color: darken($accent, 5%); }
-    .stat-card__sub   { color: $accent; opacity: 0.7; }
+    .stat-card__value {
+      color: $accent;
+    }
+    .stat-card__label {
+      color: darken($accent, 5%);
+    }
+    .stat-card__sub {
+      color: $accent;
+      opacity: 0.7;
+    }
   }
 
   &__value {
@@ -469,8 +567,12 @@ body {
     color: $text-primary;
     letter-spacing: -0.5px;
 
-    @media (max-width: $bp-tablet)  { font-size: 24px; }
-    @media (max-width: $bp-mobile)  { font-size: 22px; }
+    @media (max-width: $bp-tablet) {
+      font-size: 24px;
+    }
+    @media (max-width: $bp-mobile) {
+      font-size: 22px;
+    }
   }
 
   &__label {
@@ -479,14 +581,19 @@ body {
     color: $text-primary;
     margin-top: 6px;
 
-    @media (max-width: $bp-mobile)  { font-size: 11px; margin-top: 4px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 11px;
+      margin-top: 4px;
+    }
   }
 
   &__sub {
     font-size: 11.5px;
     color: $text-muted;
 
-    @media (max-width: $bp-mobile)  { font-size: 10.5px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 10.5px;
+    }
   }
 }
 
@@ -497,7 +604,9 @@ body {
   flex-direction: column;
   gap: 14px;
 
-  @media (max-width: $bp-mobile) { gap: 10px; }
+  @media (max-width: $bp-mobile) {
+    gap: 10px;
+  }
 
   &__header {
     display: flex;
@@ -519,7 +628,9 @@ body {
     font-size: 12px;
     color: $text-muted;
 
-    @media (max-width: $bp-mobile) { display: none; }
+    @media (max-width: $bp-mobile) {
+      display: none;
+    }
   }
 }
 
@@ -531,12 +642,20 @@ body {
   gap: 10px;
   list-style: none;
 
-  @media (max-width: $bp-mobile) { gap: 8px; }
+  @media (max-width: $bp-mobile) {
+    gap: 8px;
+  }
 }
 
 @keyframes taskIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .task-item {
@@ -578,12 +697,31 @@ body {
     font-weight: 700;
     flex-shrink: 0;
 
-    @media (max-width: $bp-mobile) { width: 30px; height: 30px; font-size: 11px; border-radius: 6px; }
+    @media (max-width: $bp-mobile) {
+      width: 30px;
+      height: 30px;
+      font-size: 11px;
+      border-radius: 6px;
+    }
 
-    &--email      { background: #eff6ff; color: #2563eb; }
-    &--linkedin   { background: #f0f9ff; color: #0284c7; font-size: 11px; letter-spacing: -0.5px; }
-    &--call       { background: #f0fdf4; color: #16a34a; }
-    &--follow-up  { background: #fff7ed; color: #d97706; }
+    &--email {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+    &--linkedin {
+      background: #f0f9ff;
+      color: #0284c7;
+      font-size: 11px;
+      letter-spacing: -0.5px;
+    }
+    &--call {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+    &--follow-up {
+      background: #fff7ed;
+      color: #d97706;
+    }
   }
 
   &__body {
@@ -602,7 +740,9 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
 
-    @media (max-width: $bp-mobile) { font-size: 13px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 13px;
+    }
   }
 
   &__meta {
@@ -612,14 +752,25 @@ body {
     font-size: 12px;
     flex-wrap: wrap;
 
-    @media (max-width: $bp-mobile) { font-size: 11px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 11px;
+    }
   }
 
-  &__contact { color: $text-secondary; font-weight: 500; }
-  &__company { color: $text-muted; }
-  &__sep     {
+  &__contact {
+    color: $text-secondary;
+    font-weight: 500;
+  }
+  &__company {
+    color: $text-muted;
+  }
+  &__sep {
     color: $border;
-    &--hide-mobile { @media (max-width: $bp-mobile) { display: none; } }
+    &--hide-mobile {
+      @media (max-width: $bp-mobile) {
+        display: none;
+      }
+    }
   }
 
   &__tag {
@@ -631,7 +782,11 @@ body {
     color: $text-muted;
     font-weight: 500;
 
-    &--hide-mobile { @media (max-width: $bp-mobile) { display: none; } }
+    &--hide-mobile {
+      @media (max-width: $bp-mobile) {
+        display: none;
+      }
+    }
   }
 
   &__time {
@@ -641,7 +796,9 @@ body {
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
 
-    @media (max-width: $bp-mobile) { font-size: 11px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 11px;
+    }
   }
 
   &__actions {
@@ -686,23 +843,38 @@ body {
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
   white-space: nowrap;
 
-  &:active { transform: scale(0.97); }
-  &:disabled { opacity: 0.35; pointer-events: none; }
+  &:active {
+    transform: scale(0.97);
+  }
+  &:disabled {
+    opacity: 0.35;
+    pointer-events: none;
+  }
 
-  @media (max-width: $bp-mobile) { font-size: 12.5px; padding: 8px 12px; }
+  @media (max-width: $bp-mobile) {
+    font-size: 12.5px;
+    padding: 8px 12px;
+  }
 
   &--ghost {
     background: $surface-2;
     color: $text-secondary;
     border: 1px solid $border;
-    &:hover { background: $bg; color: $text-primary; border-color: darken($border, 6%); }
+    &:hover {
+      background: $bg;
+      color: $text-primary;
+      border-color: darken($border, 6%);
+    }
   }
 
   &--primary {
     background: $accent;
     color: #fff;
-    box-shadow: 0 1px 4px rgba($accent, .3);
-    &:hover { background: $accent-hover; box-shadow: 0 2px 8px rgba($accent, .35); }
+    box-shadow: 0 1px 4px rgba($accent, 0.3);
+    &:hover {
+      background: $accent-hover;
+      box-shadow: 0 2px 8px rgba($accent, 0.35);
+    }
   }
 
   &--modal {
@@ -711,7 +883,9 @@ body {
     font-size: 13px;
     padding: 10px 10px;
     white-space: nowrap;
-    &:hover { background: $accent-hover; }
+    &:hover {
+      background: $accent-hover;
+    }
 
     @media (max-width: $bp-mobile) {
       width: 100%;
@@ -730,7 +904,7 @@ body {
     display: inline-block;
     width: 15px;
     height: 15px;
-    border: 2px solid rgba(255,255,255,.35);
+    border: 2px solid rgba(255, 255, 255, 0.35);
     border-top-color: #fff;
     border-radius: 50%;
     animation: spin 0.65s linear infinite;
@@ -738,25 +912,37 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
 @keyframes overlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modalIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10,10,10,.38);
+  background: rgba(10, 10, 10, 0.38);
   backdrop-filter: blur(5px);
   display: grid;
   place-items: center;
@@ -764,7 +950,10 @@ body {
   padding: 24px;
   animation: overlayIn 0.18s ease;
 
-  @media (max-width: $bp-mobile) { padding: 16px; align-items: flex-end; }
+  @media (max-width: $bp-mobile) {
+    padding: 16px;
+    align-items: flex-end;
+  }
 }
 
 .modal {
@@ -803,7 +992,10 @@ body {
     display: grid;
     place-items: center;
     transition: background 0.15s, color 0.15s;
-    &:hover { background: $border; color: $text-primary; }
+    &:hover {
+      background: $border;
+      color: $text-primary;
+    }
   }
 
   &__eyebrow {
@@ -822,7 +1014,9 @@ body {
     letter-spacing: -0.3px;
     line-height: 1.25;
 
-    @media (max-width: $bp-mobile) { font-size: 20px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 20px;
+    }
   }
 
   &__body {
@@ -831,7 +1025,9 @@ body {
     line-height: 1.65;
     margin-bottom: 4px;
 
-    @media (max-width: $bp-mobile) { font-size: 13.5px; }
+    @media (max-width: $bp-mobile) {
+      font-size: 13.5px;
+    }
   }
 
   &__input-row {
@@ -856,17 +1052,21 @@ body {
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
 
-    &::placeholder { color: $text-muted; }
+    &::placeholder {
+      color: $text-muted;
+    }
 
     &:focus {
       border-color: $accent;
-      box-shadow: 0 0 0 3px rgba($accent, .12);
+      box-shadow: 0 0 0 3px rgba($accent, 0.12);
       background: $surface;
     }
 
     &--error {
       border-color: #dc2626;
-      &:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.12); }
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+      }
     }
   }
 
@@ -884,7 +1084,10 @@ body {
     align-items: center;
     gap: 5px;
 
-    &::before { content: '⚠'; font-size: 11px; }
+    &::before {
+      content: "⚠";
+      font-size: 11px;
+    }
   }
 
   &__success {
@@ -902,7 +1105,9 @@ body {
     animation: taskIn 0.3s ease;
   }
 
-  &__success-icon { font-size: 18px; }
+  &__success-icon {
+    font-size: 18px;
+  }
 }
 // ─── Pipeline ─────────────────────────────────────────────────────────────────
 
@@ -998,8 +1203,14 @@ body {
 }
 
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .deal-card {
@@ -1129,14 +1340,18 @@ body {
   width: 180px;
   transition: border-color 0.15s, box-shadow 0.15s;
 
-  &::placeholder { color: $text-muted; }
+  &::placeholder {
+    color: $text-muted;
+  }
 
   &:focus {
     border-color: $accent;
-    box-shadow: 0 0 0 3px rgba($accent, .10);
+    box-shadow: 0 0 0 3px rgba($accent, 0.1);
   }
 
-  @media (max-width: $bp-mobile) { width: 120px; }
+  @media (max-width: $bp-mobile) {
+    width: 120px;
+  }
 }
 
 .contacts-form {
@@ -1169,10 +1384,12 @@ body {
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
 
-    &::placeholder { color: $text-muted; }
+    &::placeholder {
+      color: $text-muted;
+    }
     &:focus {
       border-color: $accent;
-      box-shadow: 0 0 0 3px rgba($accent, .10);
+      box-shadow: 0 0 0 3px rgba($accent, 0.1);
       background: $surface;
     }
   }
@@ -1216,15 +1433,32 @@ body {
     border-bottom: 1px solid $border;
     transition: background 0.12s;
 
-    &:last-child { border-bottom: none; }
-    &:hover { background: $bg; }
+    &:last-child {
+      border-bottom: none;
+    }
+    &:hover {
+      background: $bg;
+    }
 
-    td { padding: 11px 16px; vertical-align: middle; }
+    td {
+      padding: 11px 16px;
+      vertical-align: middle;
+    }
   }
 
-  &__name    { font-weight: 500; color: $text-primary; white-space: nowrap; }
-  &__company { color: $text-secondary; white-space: nowrap; }
-  &__email   { color: $text-muted; font-size: 12.5px; }
+  &__name {
+    font-weight: 500;
+    color: $text-primary;
+    white-space: nowrap;
+  }
+  &__company {
+    color: $text-secondary;
+    white-space: nowrap;
+  }
+  &__email {
+    color: $text-muted;
+    font-size: 12.5px;
+  }
 
   &__empty {
     text-align: center;
@@ -1247,8 +1481,12 @@ body {
   transition: opacity 0.15s, transform 0.1s;
   white-space: nowrap;
 
-  &:hover { opacity: 0.8; }
-  &:active { transform: scale(0.96); }
+  &:hover {
+    opacity: 0.8;
+  }
+  &:active {
+    transform: scale(0.96);
+  }
 }
 
 .contacts-delete {
@@ -1260,5 +1498,94 @@ body {
     background: #fff1f0 !important;
     border-color: #ffccc7 !important;
     color: #cf1322 !important;
+  }
+}
+
+/* ==========================================================================
+   КРАСИВАЯ СТИЛИЗАЦИЯ ФОРМЫ ДОБАВЛЕНИЯ СДЕЛКИ (PIPELINE)
+   ========================================================================== */
+
+.task-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  animation: fadeInForm 0.2s ease-out;
+
+  .task-form__group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+
+    &:last-of-type {
+      margin-bottom: 20px;
+    }
+  }
+
+  .task-form__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563;
+  }
+
+  .task-form__input,
+  .task-form__select {
+    width: 100%;
+    height: 38px;
+    padding: 8px 12px;
+    font-size: 14px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #1f2937;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  /* Стилизация селектора (Stage) */
+  .task-form__select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  /* Кнопка отправки внутри формы */
+  .btn[type="submit"] {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+}
+
+/* Плавное появление формы */
+@keyframes fadeInForm {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
