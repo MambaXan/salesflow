@@ -25,7 +25,7 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<AddTaskForm>(EMPTY_FORM);
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting] = useState(false);
 
   useEffect(() => {
     fetch(API)
