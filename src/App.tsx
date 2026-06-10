@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { ToastProvider } from "./сontext/ToastContext";
 import "./App.scss";
 
 import Sidebar, { PageKey } from "./components/Sidebar";
@@ -38,15 +39,17 @@ export default function App() {
   };
 
   return (
-    <div className="app">
-      <MobileBar
-        activePage={activePage}
-        menuOpen={menuOpen}
-        onToggleMenu={toggleMenu}
-        onNavigate={navigate}
-      />
-      <Sidebar activePage={activePage} onNavigate={navigate} />
-      {renderPage()}
-    </div>
+    <ToastProvider>
+      <div className="app">
+        <MobileBar
+          activePage={activePage}
+          menuOpen={menuOpen}
+          onToggleMenu={toggleMenu}
+          onNavigate={navigate}
+        />
+        <Sidebar activePage={activePage} onNavigate={navigate} />
+        {renderPage()}
+      </div>
+    </ToastProvider>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../сontext/ToastContext";
 
 type Stage = "Lead" | "Contacted" | "Meeting Scheduled" | "Closed Won";
 
@@ -53,6 +54,7 @@ function formatDate(d: string) {
 }
 
 export default function Pipeline() {
+  const { addToast } = useToast();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<AddDealForm>(EMPTY_FORM);
@@ -111,6 +113,7 @@ export default function Pipeline() {
     if (isDemoMode) {
       const fakeNew: Deal = { id: Date.now(), ...newDealData };
       saveToLocal([...deals, fakeNew]);
+      addToast(`Deal for ${newDealData.company} added to sandbox!`, "success");
       setForm(EMPTY_FORM);
       setShowForm(false);
     } else {
@@ -123,11 +126,15 @@ export default function Pipeline() {
         .then((data) => {
           if (data.deal) {
             setDeals((prev) => [...prev, data.deal]);
+            addToast(`Deal for ${newDealData.company} successfully created!`, "success");
             setForm(EMPTY_FORM);
             setShowForm(false);
           }
         })
-        .catch((e) => console.error("Error adding deal:", e));
+        .catch((e) => {
+          console.error("Error adding deal:", e);
+          addToast("Failed to create deal. Try again.", "error");
+        });
     }
   };
 
@@ -141,6 +148,12 @@ export default function Pipeline() {
     if (isDemoMode) {
       const updated = deals.map((d) => (d.id === id ? { ...d, status: next } : d));
       saveToLocal(updated);
+      
+      if (next === "Closed Won") {
+        addToast(`Boom! Deal with ${deal.company} won! 🎉`, "success");
+      } else {
+        addToast(`Moved to ${next}`);
+      }
     } else {
       fetch(`${API}/${id}/status`, {
         method: "PUT",
@@ -148,12 +161,20 @@ export default function Pipeline() {
         body: JSON.stringify({ status: next }),
       })
         .then((r) => r.json())
-        .then(() =>
+        .then(() => {
           setDeals((prev) =>
             prev.map((d) => (d.id === id ? { ...d, status: next } : d))
-          )
-        )
-        .catch((e) => console.error("Error updating deal status:", e));
+          );
+          if (next === "Closed Won") {
+            addToast(`Boom! Deal with ${deal.company} won! 🎉`, "success");
+          } else {
+            addToast(`Moved to ${next}`);
+          }
+        })
+        .catch((e) => {
+          console.error("Error updating deal status:", e);
+          addToast("Failed to update status", "error");
+        });
     }
   };
 
