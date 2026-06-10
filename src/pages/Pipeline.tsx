@@ -36,6 +36,14 @@ const EMPTY_FORM: AddDealForm = {
 
 const API = "http://127.0.0.1:8000/api/deals";
 
+// Сочные дефолтные сделки для красивого демо на Vercel
+const DEMO_DEALS: Deal[] = [
+  { id: 301, contact_name: "Marc Benioff", company: "Salesforce", value: 12000, date: "2026-06-01", status: "Lead" },
+  { id: 302, contact_name: "Patrick Collison", company: "Stripe", value: 25000, date: "2026-06-05", status: "Contacted" },
+  { id: 303, contact_name: "Dylan Field", company: "Figma", value: 8500, date: "2026-06-08", status: "Meeting Scheduled" },
+  { id: 304, contact_name: "Arash Ferdowsi", company: "Dropbox", value: 4200, date: "2026-06-09", status: "Closed Won" }
+];
+
 function formatValue(v: number) {
   return "$" + v.toLocaleString("en-US");
 }
@@ -48,13 +56,40 @@ export default function Pipeline() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<AddDealForm>(EMPTY_FORM);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
+  // Инициализация данных Пайплайна
   useEffect(() => {
     fetch(API)
-      .then((r) => r.json())
-      .then((data: Deal[]) => setDeals(data))
-      .catch((e) => console.error("Error fetching deals:", e));
+      .then((r) => {
+        if (!r.ok) throw new Error("Backend offline");
+        return r.json();
+      })
+      .then((data: Deal[]) => {
+        setDeals(data);
+        setIsDemoMode(false);
+      })
+      .catch((e) => {
+        console.log("Backend offline, switching Pipeline to Demo Mode", e);
+        setIsDemoMode(true);
+
+        const local = localStorage.getItem("salesflow_deals");
+        if (local) {
+          setDeals(JSON.parse(local));
+        } else {
+          setDeals(DEMO_DEALS);
+          localStorage.setItem("salesflow_deals", JSON.stringify(DEMO_DEALS));
+        }
+      });
   }, []);
+
+  // Хелпер для сохранения изменений в localStorage
+  const saveToLocal = (newDeals: Deal[]) => {
+    setDeals(newDeals);
+    if (isDemoMode) {
+      localStorage.setItem("salesflow_deals", JSON.stringify(newDeals));
+    }
+  };
 
   const handleFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -65,28 +100,35 @@ export default function Pipeline() {
   const handleAddDeal = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const dealData = {
-      contact_name: form.contact_name,
-      company: form.company,
-      value: form.value, // Бэк распарсит строку в число, либо передаст как есть
-      date: new Date().toISOString().split('T')[0], // Сегодняшняя дата ГГГГ-ММ-ДД
+    const newDealData = {
+      contact_name: form.contact_name.trim(),
+      company: form.company.trim(),
+      value: Number(form.value) || 0,
+      date: new Date().toISOString().split('T')[0],
       status: form.status
     };
 
-    fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dealData),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.deal) {
-          setDeals((prev) => [...prev, data.deal]);
-          setForm(EMPTY_FORM);
-          setShowForm(false);
-        }
+    if (isDemoMode) {
+      const fakeNew: Deal = { id: Date.now(), ...newDealData };
+      saveToLocal([...deals, fakeNew]);
+      setForm(EMPTY_FORM);
+      setShowForm(false);
+    } else {
+      fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newDealData),
       })
-      .catch((e) => console.error("Error adding deal:", e));
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.deal) {
+            setDeals((prev) => [...prev, data.deal]);
+            setForm(EMPTY_FORM);
+            setShowForm(false);
+          }
+        })
+        .catch((e) => console.error("Error adding deal:", e));
+    }
   };
 
   const move = (id: number, dir: 1 | -1) => {
@@ -96,18 +138,23 @@ export default function Pipeline() {
     const next = STAGES[idx + dir];
     if (!next) return;
 
-    fetch(`${API}/${id}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: next }),
-    })
-      .then((r) => r.json())
-      .then(() =>
-        setDeals((prev) =>
-          prev.map((d) => (d.id === id ? { ...d, status: next } : d))
+    if (isDemoMode) {
+      const updated = deals.map((d) => (d.id === id ? { ...d, status: next } : d));
+      saveToLocal(updated);
+    } else {
+      fetch(`${API}/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      })
+        .then((r) => r.json())
+        .then(() =>
+          setDeals((prev) =>
+            prev.map((d) => (d.id === id ? { ...d, status: next } : d))
+          )
         )
-      )
-      .catch((e) => console.error("Error updating deal status:", e));
+        .catch((e) => console.error("Error updating deal status:", e));
+    }
   };
 
   const totalValue = deals
@@ -119,7 +166,9 @@ export default function Pipeline() {
       <header className="topbar">
         <div className="topbar__left">
           <h1 className="topbar__title">Pipeline</h1>
-          <span className="topbar__date">Deal tracker · {deals.length} deals</span>
+          <span className="topbar__date">
+            {isDemoMode ? "🔮 Demo Sandbox" : "Deal tracker"} · {deals.length} deals
+          </span>
         </div>
         <div className="topbar__right" style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           <div className="topbar__badge" style={{ borderColor: "#bbf7d0", color: "#16a34a" }}>

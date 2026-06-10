@@ -21,35 +21,116 @@ const EMPTY_FORM: AddTaskForm = {
   time: "",
 };
 
+// Вкусные дефолтные таски для демо-режима
+const DEMO_TASKS: Task[] = [
+  {
+    id: 201,
+    type: "email",
+    title: "Write customized intro email with new offer",
+    contact: "John Doe",
+    company: "Stripe",
+    time: "9:30 AM",
+    completed: false,
+  },
+  {
+    id: 202,
+    type: "linkedin",
+    title: "Send connection request with note about their tech stack",
+    contact: "Sandra Adams",
+    company: "Linear",
+    time: "11:00 AM",
+    completed: true,
+  },
+  {
+    id: 203,
+    type: "call",
+    title: "Follow-up call regarding the proposal",
+    contact: "Michael Scott",
+    company: "Dunder Mifflin",
+    time: "2:00 PM",
+    completed: false,
+  },
+  {
+    id: 204,
+    type: "follow-up",
+    title: "Ping via email if no answer on LinkedIn",
+    contact: "Naval Ravikant",
+    company: "Airchat",
+    time: "4:30 PM",
+    completed: false,
+  },
+];
+
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<AddTaskForm>(EMPTY_FORM);
   const [submitting] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
+  // Инициализация данных тасков
   useEffect(() => {
     fetch(API)
-      .then((r) => r.json())
-      .then((data: Task[]) => setTasks(data))
-      .catch((e) => console.error("Error fetching tasks:", e));
+      .then((r) => {
+        if (!r.ok) throw new Error("Backend offline");
+        return r.json();
+      })
+      .then((data: Task[]) => {
+        setTasks(data);
+        setIsDemoMode(false);
+      })
+      .catch((e) => {
+        console.log("Backend offline, switching Dashboard to Demo Mode", e);
+        setIsDemoMode(true);
+
+        const local = localStorage.getItem("salesflow_tasks");
+        if (local) {
+          setTasks(JSON.parse(local));
+        } else {
+          setTasks(DEMO_TASKS);
+          localStorage.setItem("salesflow_tasks", JSON.stringify(DEMO_TASKS));
+        }
+      });
   }, []);
 
+  // Хелпер для сохранения изменений в localStorage
+  const saveToLocal = (newTasks: Task[]) => {
+    setTasks(newTasks);
+    if (isDemoMode) {
+      localStorage.setItem("salesflow_tasks", JSON.stringify(newTasks));
+    }
+  };
+
   const toggleTask = (id: number) => {
-    fetch(`${API}/${id}`, { method: "PUT" })
-      .then((r) => r.json())
-      .then(() =>
-        setTasks((prev) =>
-          prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    if (isDemoMode) {
+      const updated = tasks.map((t) =>
+        t.id === id ? { ...t, completed: !t.completed } : t
+      );
+      saveToLocal(updated);
+    } else {
+      fetch(`${API}/${id}`, { method: "PUT" })
+        .then((r) => r.json())
+        .then(() =>
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === id ? { ...t, completed: !t.completed } : t
+            )
+          )
         )
-      )
-      .catch((e) => console.error("Error toggling task:", e));
+        .catch((e) => console.error("Error toggling task:", e));
+    }
   };
 
   const deleteTask = (id: number) => {
-    fetch(`${API}/${id}`, { method: "DELETE" })
-      .then((r) => r.json())
-      .then(() => setTasks((prev) => prev.filter((t) => t.id !== id)))
-      .catch((e) => console.error("Error deleting task:", e));
+    if (isDemoMode) {
+      const updated = tasks.filter((t) => t.id !== id);
+      saveToLocal(updated);
+    } else {
+      fetch(`${API}/${id}`, { method: "DELETE" })
+        .then((r) => r.json())
+        .then(() => setTasks((prev) => prev.filter((t) => t.id !== id)))
+        .catch((e) => console.error("Error deleting task:", e));
+    }
   };
 
   const handleFormChange = (
@@ -59,24 +140,42 @@ export default function Dashboard() {
   };
 
   const handleAddTask = (taskData: any) => {
-    fetch("http://127.0.0.1:8000/api/tasks", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(taskData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.task) {
-          setTasks((prevTasks) => [...prevTasks, data.task]);
+    if (!form.title.trim() || !form.contact.trim()) {
+      alert("Task title and Contact name are required.");
+      return;
+    }
 
-          // 👑 ЧИНЯЩИЙ МУВ: очищаем форму и закрываем её
-          setForm(EMPTY_FORM);
-          setShowForm(false);
-        }
+    if (isDemoMode) {
+      const fakeNew: Task = {
+        id: Date.now(),
+        type: taskData.type,
+        title: taskData.title.trim(),
+        contact: taskData.contact.trim(),
+        company: taskData.company.trim() || "Independent",
+        time: taskData.time.trim() || "Anytime",
+        completed: false,
+      };
+      saveToLocal([...tasks, fakeNew]);
+      setForm(EMPTY_FORM);
+      setShowForm(false);
+    } else {
+      fetch(API, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(taskData),
       })
-      .catch((error) => console.error("Error adding task:", error));
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.task) {
+            setTasks((prevTasks) => [...prevTasks, data.task]);
+            setForm(EMPTY_FORM);
+            setShowForm(false);
+          }
+        })
+        .catch((error) => console.error("Error adding task:", error));
+    }
   };
 
   const completedCount = tasks.filter((t) => t.completed).length;
@@ -110,8 +209,11 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="topbar__badge">
-            <span className="topbar__badge-dot" />
-            Manual mode
+            <span
+              className="topbar__badge-dot"
+              style={{ backgroundColor: isDemoMode ? "#eab308" : "#2563eb" }}
+            />
+            {isDemoMode ? "🔮 Demo Sandbox" : "Manual mode"}
           </div>
         </div>
       </header>
