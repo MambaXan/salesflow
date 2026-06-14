@@ -1,4 +1,7 @@
 import React from "react";
+import FeedbackModal from "./FeedbackModal/FeedbackModal";
+import "./FeedbackModal/FeedbackModal.scss"
+
 
 export type PageKey = "Dashboard" | "Pipeline" | "Sequences" | "Contacts" | "Analytics";
 
@@ -13,9 +16,10 @@ export const NAV_ITEMS: { icon: string; label: PageKey }[] = [
 interface SidebarProps {
   activePage: PageKey;
   onNavigate: (page: PageKey) => void;
+  onOpenFeedback: () => void;
 }
 
-export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
+export default function Sidebar({ activePage, onNavigate, onOpenFeedback }: SidebarProps) {
   return (
     <aside className="sidebar">
       <div className="sidebar__logo">
@@ -40,6 +44,9 @@ export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
           <span className="sidebar__user-name">Alex Lee</span>
           <span className="sidebar__user-role">Sales Rep</span>
         </div>
+        <button className="feedback-sidebar-btn" onClick={onOpenFeedback}>
+          💬 Feedback
+        </button>
       </div>
     </aside>
   );

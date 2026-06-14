@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ToastProvider } from "./сontext/ToastContext";
+import FeedbackModal from "./components/FeedbackModal/FeedbackModal";
 import "./App.scss";
 
 import Sidebar, { PageKey } from "./components/Sidebar";
@@ -12,6 +13,7 @@ import { Sequences, Analytics } from "./pages/stubs";
 export default function App() {
   const [activePage, setActivePage] = useState<PageKey>("Dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const navigate = useCallback((page: PageKey) => {
     setActivePage(page);
@@ -47,9 +49,13 @@ export default function App() {
           onToggleMenu={toggleMenu}
           onNavigate={navigate}
         />
-        <Sidebar activePage={activePage} onNavigate={navigate} />
+        <Sidebar activePage={activePage} onNavigate={navigate} onOpenFeedback={() => setIsFeedbackOpen(true)}/>
         {renderPage()}
       </div>
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+      />
     </ToastProvider>
   );
 }
