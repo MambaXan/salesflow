@@ -15,7 +15,7 @@ interface Deal {
 interface AddDealForm {
   contact_name: string;
   company: string;
-  value: string; // Строка для инпута, потом приведем к числу
+  value: string;
   status: Stage;
 }
 
@@ -37,12 +37,14 @@ const EMPTY_FORM: AddDealForm = {
 
 const API = "http://127.0.0.1:8000/api/deals";
 
-// Сочные дефолтные сделки для красивого демо на Vercel
 const DEMO_DEALS: Deal[] = [
-  { id: 301, contact_name: "Marc Benioff", company: "Salesforce", value: 12000, date: "2026-06-01", status: "Lead" },
-  { id: 302, contact_name: "Patrick Collison", company: "Stripe", value: 25000, date: "2026-06-05", status: "Contacted" },
-  { id: 303, contact_name: "Dylan Field", company: "Figma", value: 8500, date: "2026-06-08", status: "Meeting Scheduled" },
-  { id: 304, contact_name: "Arash Ferdowsi", company: "Dropbox", value: 4200, date: "2026-06-09", status: "Closed Won" }
+  { id: 301, contact_name: "Marc Benioff", company: "Salesforce", value: 12500, date: "2026-06-01", status: "Lead" },
+  { id: 302, contact_name: "Brian Chesky", company: "Airbnb", value: 45000, date: "2026-06-03", status: "Lead" },
+  { id: 303, contact_name: "Patrick Collison", company: "Stripe", value: 25000, date: "2026-06-05", status: "Contacted" },
+  { id: 304, contact_name: "Ryan Breslow", company: "Bolt", value: 18000, date: "2026-06-07", status: "Contacted" },
+  { id: 305, contact_name: "Dylan Field", company: "Figma", value: 9500, date: "2026-06-08", status: "Meeting Scheduled" },
+  { id: 306, contact_name: "Arash Ferdowsi", company: "Dropbox", value: 4200, date: "2026-06-09", status: "Closed Won" },
+  { id: 307, contact_name: "Tobias Lütke", company: "Shopify", value: 64000, date: "2026-06-11", status: "Closed Won" }
 ];
 
 function formatValue(v: number) {
@@ -60,7 +62,6 @@ export default function Pipeline() {
   const [form, setForm] = useState<AddDealForm>(EMPTY_FORM);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
-  // Инициализация данных Пайплайна
   useEffect(() => {
     fetch(API)
       .then((r) => {
@@ -85,7 +86,6 @@ export default function Pipeline() {
       });
   }, []);
 
-  // Хелпер для сохранения изменений в localStorage
   const saveToLocal = (newDeals: Deal[]) => {
     setDeals(newDeals);
     if (isDemoMode) {
@@ -256,6 +256,51 @@ export default function Pipeline() {
           </div>
           <button type="submit" className="btn btn--primary">Add Deal</button>
         </form>
+      )}
+      {isDemoMode && (
+        <div className="demo-banner" style={{
+          background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+          border: "1px solid #bfdbfe",
+          borderRadius: "12px",
+          padding: "16px 20px",
+          marginBottom: "24px",
+          display: "flex",
+          justifyContent: "space-between", // Исправили на camelCase и строку
+          alignItems: "center",
+          boxShadow: "0 2px 8px rgba(59, 130, 246, 0.05)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "24px" }}>🚀</span>
+            <div>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: "#1e40af" }}>
+                Welcome to Salesflow Interactive Sandbox!
+              </h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#1e3a8a", opacity: 0.8 }}>
+                Try clicking the <strong>→ arrows</strong> on cards to advance deals, or add a fake new deal to see how seamlessly it tracks.
+              </p>
+            </div>
+          </div>
+          <button 
+            className="btn" 
+            onClick={() => {
+              localStorage.removeItem("salesflow_deals");
+              setDeals(DEMO_DEALS);
+              addToast("Sandbox reset to default data!", "success"); // Заменили "info" на валидный "success"
+            }}
+            style={{
+              background: "#ffffff",
+              color: "#2563eb",
+              border: "1px solid #bfdbfe",
+              padding: "8px 12px",
+              fontSize: "12px",
+              fontWeight: 600,
+              borderRadius: "6px",
+              cursor: "pointer"
+            }}
+          >
+            Reset Demo Data
+          </button>
+        </div>
       )}
 
       <div className="kanban">
