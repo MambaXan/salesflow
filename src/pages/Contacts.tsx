@@ -21,9 +21,12 @@ const EMPTY = { name: "", company: "", email: "" };
 
 // Дефолтные данные для демо-режима, чтобы юзер сразу видел красивую заполненную базу
 const DEMO_CONTACTS: Contact[] = [
-  { id: 101, name: "John Doe", company: "Stripe", email: "john@stripe.com", status: "Active" },
-  { id: 102, name: "Sandra Adams", company: "Linear", email: "sandra@linear.app", status: "Replied" },
-  { id: 103, name: "Michael Scott", company: "Dunder Mifflin", email: "michael@dundermifflin.com", status: "No Answer" }
+  { id: 101, name: "Marc Benioff", company: "Salesforce", email: "marc@salesforce.com", status: "Active" },
+  { id: 102, name: "Brian Chesky", company: "Airbnb", email: "brian@airbnb.com", status: "Active" },
+  { id: 103, name: "Patrick Collison", company: "Stripe", email: "patrick@stripe.com", status: "Replied" },
+  { id: 104, name: "Dylan Field", company: "Figma", email: "dylan@figma.com", status: "Replied" },
+  { id: 105, name: "Tobias Lütke", company: "Shopify", email: "tobi@shopify.com", status: "No Answer" },
+  { id: 106, name: "Michael Scott", company: "Dunder Mifflin", email: "michael@dundermifflin.com", status: "No Answer" }
 ];
 
 export default function Contacts() {
@@ -142,9 +145,12 @@ export default function Contacts() {
       return { ...c, status: order[(idx + 1) % order.length] };
     });
 
-    saveToLocal(updated);
-
-    // Если бэк активен, тут можно будет потом дописать PATCH/PUT запрос обновления на сервер
+    if (isDemoMode) {
+      saveToLocal(updated);
+    } else {
+      setContacts(updated);
+      // Сюда потом допишешь fetch запрос на бэк, когда поднимешь эндпоинт
+    }
   };
 
   return (
@@ -183,6 +189,50 @@ export default function Contacts() {
             <button className="btn btn--primary" onClick={handleAdd}>Add</button>
             {error && <span className="contacts-form__error">⚠ {error}</span>}
           </div>
+        </div>
+      )}
+      {isDemoMode && (
+        <div className="demo-banner" style={{
+          background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)", // Сделаем его нежно-зеленым для разнообразия
+          border: "1px solid #bbf7d0",
+          borderRadius: "12px",
+          padding: "14px 20px",
+          marginBottom: "24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          boxShadow: "0 2px 8px rgba(22, 163, 74, 0.05)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "24px" }}>⚡</span>
+            <div>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: "#166534" }}>
+                Lead & Contact Database Sandbox
+              </h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#14532d", opacity: 0.8 }}>
+                Click on any <strong>Status badge</strong> (e.g. Active) inside the table to cycle through lead response stages on the fly.
+              </p>
+            </div>
+          </div>
+          <button 
+            className="btn" 
+            onClick={() => {
+              localStorage.removeItem("salesflow_contacts");
+              setContacts(DEMO_CONTACTS);
+            }}
+            style={{
+              background: "#ffffff",
+              color: "#16a34a",
+              border: "1px solid #bbf7d0",
+              padding: "8px 12px",
+              fontSize: "12px",
+              fontWeight: 600,
+              borderRadius: "6px",
+              cursor: "pointer"
+            }}
+          >
+            Reset Table
+          </button>
         </div>
       )}
 
