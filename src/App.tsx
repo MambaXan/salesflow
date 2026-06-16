@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 import { ToastProvider } from "./сontext/ToastContext";
 import FeedbackModal from "./components/FeedbackModal/FeedbackModal";
 import Analytics from "./pages/Analytics";
+import Sequences from "./pages/Sequence";
 import "./App.scss";
 
 import Sidebar, { PageKey } from "./components/Sidebar";
@@ -9,7 +10,6 @@ import MobileBar from "./components/MobileBar";
 import Dashboard from "./pages/Dashboard";
 import Pipeline from "./pages/Pipeline";
 import Contacts from "./pages/Contacts";
-import { Sequences } from "./pages/stubs";
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageKey>("Dashboard");
