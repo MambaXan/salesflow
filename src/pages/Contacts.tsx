@@ -149,7 +149,6 @@ export default function Contacts() {
       saveToLocal(updated);
     } else {
       setContacts(updated);
-      // Сюда потом допишешь fetch запрос на бэк, когда поднимешь эндпоинт
     }
   };
 
