@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import "./FeedbackModal.scss"; 
-import { useToast } from "../../сontext/ToastContext";
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -8,81 +6,103 @@ interface FeedbackModalProps {
 }
 
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
-  const { addToast } = useToast();
-  const [text, setText] = useState("");
-  const [type, setType] = useState<"idea" | "bug">("idea");
-  const [isSending, setIsSending] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-
-    setIsSending(true);
-
-    setTimeout(() => {
-      const savedFeedback = JSON.parse(localStorage.getItem("salesflow_feedback") || "[]");
-      savedFeedback.push({
-        id: Date.now(),
-        type,
-        text: text.trim(),
-        date: new Date().toISOString()
-      });
-      localStorage.setItem("salesflow_feedback", JSON.stringify(savedFeedback));
-
-      addToast(
-        type === "idea" 
-          ? "Thanks for your feedback! Idea captured ✨" 
-          : "Bug report submitted. We are on it! 🛠️", 
-        "success"
-      );
-
-      setText("");
-      setIsSending(false);
-      onClose(); // Закрываем
-    }, 1000);
-  };
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
 
   if (!isOpen) return null;
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus("loading");
+
+    try {
+      const response = await fetch("https://formspree.io/f/xpqnbvzj", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        setEmail("");
+      } else {
+        setStatus("error");
+      }
+    } catch (error) {
+      setStatus("error");
+    }
+  };
+
   return (
-    <div className="feedback-overlay" onClick={onClose}>
-      <div className="feedback-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="feedback-modal__header">
-          <h3>Share Feedback</h3>
-          <button className="feedback-modal__close" onClick={onClose}>×</button>
-        </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal__close" onClick={onClose}>
+          ✕
+        </button>
 
-        <form onSubmit={handleSubmit} className="feedback-modal__form">
-          <div className="feedback-modal__tabs">
-            <button
-              type="button"
-              className={`feedback-modal__tab ${type === "idea" ? "active" : ""}`}
-              onClick={() => setType("idea")}
-            >
-              💡 Idea / Suggestion
-            </button>
-            <button
-              type="button"
-              className={`feedback-modal__tab ${type === "bug" ? "active" : ""}`}
-              onClick={() => setType("bug")}
-            >
-              🪲 Report a Bug
-            </button>
+        <span className="modal__eyebrow">Join the Waitlist</span>
+        <h3 className="modal__title">Get Early Access to Salesflow</h3>
+
+        {status !== "success" ? (
+          <>
+            <p className="modal__body">
+              Leave your email below. We'll invite you to the private beta as
+              soon as the next slot opens.
+            </p>
+
+            <form onSubmit={handleSubmit} className="modal__input-row">
+              <input
+                type="email"
+                required
+                placeholder="name@company.com"
+                className={`modal__input ${
+                  status === "error" ? "modal__input--error" : ""
+                }`}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (status === "error") setStatus("idle");
+                }}
+                disabled={status === "loading"}
+              />
+              <button
+                type="submit"
+                className={`btn btn--modal ${
+                  status === "loading" ? "btn--loading" : ""
+                }`}
+                disabled={status === "loading"}
+              >
+                {status === "loading" ? (
+                  <span className="btn__spinner" />
+                ) : (
+                  "Request Invite"
+                )}
+              </button>
+            </form>
+
+            {status === "error" && (
+              <span className="modal__error">
+                Something went wrong. Please try again.
+              </span>
+            )}
+          </>
+        ) : (
+          <div className="modal__success">
+            <span className="modal__success-icon">🎉</span>
+            <div>
+              <strong>You're on the list!</strong>
+              <p style={{ fontSize: "12px", margin: 0, opacity: 0.8 }}>
+                We will reach out to you shortly.
+              </p>
+            </div>
           </div>
-
-          <textarea
-            className="feedback-modal__textarea"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={type === "idea" ? "What feature is missing? How can we improve?" : "Describe what went wrong..."}
-            required
-            rows={4}
-          />
-
-          <button type="submit" className="btn btn--primary" disabled={isSending}>
-            {isSending ? "Sending..." : "Submit Feedback"}
-          </button>
-        </form>
+        )}
       </div>
     </div>
   );
