@@ -183,91 +183,49 @@ export default function Analytics() {
         </h3>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {STAGES.map((stage) => {
-            const stageDeals = deals.filter((d) => d.status === stage);
-            const stageValue = stageDeals.reduce(
-              (sum, d) => sum + Number(d.value),
-              0
-            );
+        {STAGES.map((stage) => {
+  const stageDeals = deals.filter((d) => d.status === stage);
+  const stageValue = stageDeals.reduce((sum, d) => sum + Number(d.value), 0);
+  
+  const maxDeals = Math.max(...STAGES.map(s => deals.filter(d => d.status === s).length), 1);
+  const widthPercent = totalDeals > 0 
+    ? Math.max((stageDeals.length / maxDeals) * 100, 15) // увеличили минимальную ширину до 15%
+    : 15;
 
-            // Вычисляем ширину полосы в зависимости от количества сделок на этапе относительно максимума
-            const maxDeals = Math.max(
-              ...STAGES.map((s) => deals.filter((d) => d.status === s).length),
-              1
-            );
-            const widthPercent =
-              totalDeals > 0
-                ? Math.max((stageDeals.length / maxDeals) * 100, 8) // минимум 8% чтобы полоса не была нулевой видимости
-                : 8;
+  return (
+    <div key={stage} style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
+      {/* Название этапа и сумма выносим НАВЕРХ над полосой для мобилок */}
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", fontWeight: 600 }}>
+        <span style={{ color: "#4b5563" }}>{stage}</span>
+        <span style={{ color: "#111827" }}>{formatValue(stageValue)}</span>
+      </div>
 
-            return (
-              <div
-                key={stage}
-                style={{ display: "flex", alignItems: "center", gap: "16px" }}
-              >
-                {/* Название этапа */}
-                <div
-                  style={{
-                    width: "140px",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: "#4b5563",
-                  }}
-                >
-                  {stage}
-                </div>
-
-                {/* Интерактивная полоса прогресса */}
-                <div
-                  style={{
-                    flex: 1,
-                    background: "#f3f4f6",
-                    borderRadius: "6px",
-                    height: "32px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${widthPercent}%`,
-                      background: STAGE_COLORS[stage],
-                      height: "100%",
-                      borderRadius: "6px",
-                      display: "flex",
-                      alignItems: "center",
-                      paddingLeft: "12px",
-                      transition: "width 0.4s ease-out",
-                    }}
-                  >
-                    {stageDeals.length > 0 && (
-                      <span
-                        style={{
-                          color: "#ffffff",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {stageDeals.length}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Общая сумма денег на этом этапе справа */}
-                <div
-                  style={{
-                    width: "100px",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    color: "#111827",
-                    textAlign: "right",
-                  }}
-                >
-                  {formatValue(stageValue)}
-                </div>
-              </div>
-            );
-          })}
+      {/* Жирная, сочная полоса прогресса */}
+      <div style={{ background: "#f3f4f6", borderRadius: "8px", height: "38px", overflow: "hidden", display: "flex", alignItems: "center" }}>
+        <div style={{
+          width: `${widthPercent}%`,
+          background: STAGE_COLORS[stage],
+          height: "100%",
+          borderRadius: "8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end", // Цифру двигаем вправо внутри полосы
+          paddingRight: "12px",
+          transition: "width 0.4s ease-out",
+          boxShadow: "inset 0 -2px 0 rgba(0,0,0,0.1)" // легкий объем
+        }}>
+          <span style={{ 
+            color: stage === "Lead" ? "#111827" : "#ffffff", // Если фон серый (Lead), цифра темная для контраста
+            fontSize: "13px", 
+            fontWeight: 700 
+          }}>
+            {stageDeals.length} {stageDeals.length === 1 ? "deal" : "deals"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+})}
         </div>
       </div>
     </main>

@@ -33,11 +33,16 @@ export default function App() {
 
   const renderPage = () => {
     switch (activePage) {
-      case "Dashboard":  return <Dashboard />;
-      case "Pipeline":   return <Pipeline />;
-      case "Sequences":  return <Sequences />;
-      case "Contacts":   return <Contacts />;
-      case "Analytics":  return <Analytics />;
+      case "Dashboard":
+        return <Dashboard />;
+      case "Pipeline":
+        return <Pipeline />;
+      case "Sequences":
+        return <Sequences />;
+      case "Contacts":
+        return <Contacts />;
+      case "Analytics":
+        return <Analytics />;
     }
   };
 
@@ -48,14 +53,24 @@ export default function App() {
           activePage={activePage}
           menuOpen={menuOpen}
           onToggleMenu={toggleMenu}
-          onNavigate={navigate}
+          onNavigate={(page) => {
+            setActivePage(page);
+            setMenuOpen(false); // Жестко закрываем меню при клике на любую страницу
+          }}
         />
-        <Sidebar activePage={activePage} onNavigate={navigate} onOpenFeedback={() => setIsFeedbackOpen(true)}/>
+        <Sidebar
+          activePage={activePage}
+          onNavigate={(page) => {
+            setActivePage(page);
+            setMenuOpen(false); // Закрываем при клике внутри сайдбара
+          }}
+          onOpenFeedback={() => setIsFeedbackOpen(true)}
+        />
         {renderPage()}
       </div>
-      <FeedbackModal 
-        isOpen={isFeedbackOpen} 
-        onClose={() => setIsFeedbackOpen(false)} 
+      <FeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
       />
     </ToastProvider>
   );

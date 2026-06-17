@@ -1642,3 +1642,62 @@ body {
     transform: translateY(0) scale(1);
   }
 }
+@media (max-width: 768px) {
+  // Отодвигаем контент всех страниц вниз, чтобы он не залезал под шапку
+  .main, .analytics-main, .sequences-main {
+    padding-top: 80px !important; 
+  }
+}
+
+@media (max-width: 768px) {
+  // Скрываем стандартную шапку таблицы
+  .contacts-table thead {
+    display: none;
+  }
+  html, body, #root, .app {
+    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 100vw;
+  }
+  .sidebar {
+    display: none !important;
+  }
+
+  // Превращаем таблицу и строки в блочные карточки
+  .contacts-table, .contacts-table tbody, .contacts-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .contacts-table__row {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  }
+
+  // Делаем ячейки красивыми строками внутри карточки
+  .contacts-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border: none !important;
+    font-size: 14px;
+
+    // Добавляем псевдо-заголовки слева
+    &::before {
+      content: attr(data-label);
+      font-weight: 500;
+      color: #9ca3af;
+      font-size: 12px;
+    }
+  }
+  
+  // Кнопку удаления центруем или прижимаем к краю
+  .contacts-delete {
+    padding: 4px 8px;
+  }
+}

@@ -33,26 +33,23 @@ export default function MobileBar({
       </header>
 
       {menuOpen && (
-        <div
-          className="mobile-drawer-overlay"
-          onClick={onToggleMenu}
-        >
-          <nav className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.label}
-                className={`mobile-drawer__item${activePage === item.label ? " mobile-drawer__item--active" : ""}`}
-                onClick={() => {
-                  onNavigate(item.label);
-                  onToggleMenu();
-                }}
-              >
-                <span className="mobile-drawer__icon">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
+       <div className="mobile-drawer-overlay" onClick={onToggleMenu}>
+       <nav className="mobile-drawer" onClick={(e) => e.stopPropagation()}>
+         {NAV_ITEMS.map((item) => (
+           <button
+             key={item.label}
+             className={`mobile-drawer__item${activePage === item.label ? " mobile-drawer__item--active" : ""}`}
+             onClick={(e) => {
+               e.stopPropagation();        
+               onNavigate(item.label); 
+             }}
+           >
+             <span className="mobile-drawer__icon">{item.icon}</span>
+             <span>{item.label}</span>
+           </button>
+         ))}
+       </nav>
+     </div>
       )}
     </>
   );

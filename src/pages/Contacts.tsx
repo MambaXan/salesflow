@@ -251,9 +251,9 @@ export default function Contacts() {
               const s = STATUS_STYLE[c.status] || STATUS_STYLE["Active"];
               return (
                 <tr key={c.id} className="contacts-table__row">
-                  <td className="contacts-table__name">{c.name}</td>
-                  <td className="contacts-table__company">{c.company}</td>
-                  <td className="contacts-table__email">{c.email}</td>
+                  <td data-label="Name" className="contacts-table__name">{c.name}</td>
+                  <td data-label="Company" className="contacts-table__company">{c.company}</td>
+                  <td data-label="Email" className="contacts-table__email">{c.email}</td>
                   <td>
                     <button
                       className="contacts-status"
