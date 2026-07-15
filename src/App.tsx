@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ToastProvider } from "./сontext/ToastContext";
 import FeedbackModal from "./components/FeedbackModal/FeedbackModal";
+import { AuthModal } from "./components/AuthModal"; // 1. Импортируем модалку авторизации
 import Analytics from "./pages/Analytics";
 import Sequences from "./pages/Sequence";
 import "./App.scss";
@@ -15,6 +16,7 @@ export default function App() {
   const [activePage, setActivePage] = useState<PageKey>("Dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   const navigate = useCallback((page: PageKey) => {
     setActivePage(page);
@@ -55,23 +57,30 @@ export default function App() {
           onToggleMenu={toggleMenu}
           onNavigate={(page) => {
             setActivePage(page);
-            setMenuOpen(false); // Жестко закрываем меню при клике на любую страницу
+            setMenuOpen(false);
           }}
         />
         <Sidebar
           activePage={activePage}
           onNavigate={(page) => {
             setActivePage(page);
-            setMenuOpen(false); // Закрываем при клике внутри сайдбара
+            setMenuOpen(false);
           }}
           onOpenFeedback={() => setIsFeedbackOpen(true)}
+          onOpenAuth={() => setIsAuthOpen(true)}
         />
         {renderPage()}
       </div>
+      
       <FeedbackModal
         isOpen={isFeedbackOpen}
         onClose={() => setIsFeedbackOpen(false)}
       />
+
+      {/* 2. Добавляем модалку авторизации сюда */}
+      {isAuthOpen && (
+        <AuthModal onClose={() => setIsAuthOpen(false)} />
+      )}
     </ToastProvider>
   );
 }

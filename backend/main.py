@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import List
+from auth import router as auth_router
 
 DATABASE_URL = "sqlite:///./salesflow.db"
 
@@ -116,6 +117,7 @@ class DealResponse(DealBase):
 
 
 app = FastAPI(title="SalesFlow API")
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,
