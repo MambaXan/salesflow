@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from "../сontext/AuthContext";
+import { useAuth } from '../сontext/AuthContext';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -10,6 +10,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // Стейт для видимости пароля
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +20,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
     setLoading(true);
 
     const endpoint = isRegister ? '/auth/register' : '/auth/login';
+    console.log(`Sending request to: ${endpoint} with email: ${email}`);
     
     try {
       const response = await fetch(`http://127.0.0.1:8000${endpoint}`, {
@@ -34,19 +36,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
       }
 
       if (isRegister) {
-        setIsRegister(false);
-        setError('Success! Account created. Please Sign In.');
+        console.log('Registration successful!');
+        setIsRegister(false); 
+        setError('Success! Account created. Please Sign In now.');
+        setPassword(''); 
       } else {
+        console.log('Login successful! Token received.');
         if (data.access_token) {
           login(data.access_token);
           onClose();
         }
       }
     } catch (err: any) {
+      console.error('Auth error:', err.message);
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleToggleMode = () => {
+    setIsRegister((prev) => !prev);
+    setError('');
+    setPassword('');
   };
 
   return (
@@ -71,13 +83,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
           <div className="auth-modal__field">
             <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
+            <div className="auth-modal__password-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'} // Меняем тип динамически
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                className="auth-modal__toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -93,7 +115,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
         <div className="auth-modal__toggle">
           <span>{isRegister ? 'Already have an account?' : "Don't have an account?"}</span>
-          <button onClick={() => { setIsRegister(!isRegister); setError(''); }}>
+          <button type="button" onClick={handleToggleMode}>
             {isRegister ? 'Sign In' : 'Sign Up'}
           </button>
         </div>

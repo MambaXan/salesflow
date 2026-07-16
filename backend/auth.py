@@ -1,55 +1,91 @@
-from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+import datetime
+from datetime import timedelta
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, EmailStr
+from jose import JWTError, jwt
+import bcrypt
 
-# Настройки безопасности
-SECRET_KEY = "SUPER_SECRET_KEY_KEEP_IT_SAFE" # В будущем вынеси в .env
+# Настройки для JWT
+SECRET_KEY = "supersecretkey"  # Можешь поменять на свой секрет
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 1 день
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+# Наша база данных в оперативной памяти
+users_db = {}
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
-# Схемы Pydantic
 class UserAuth(BaseModel):
     email: EmailStr
     password: str
 
-# Хелперы
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict):
+# Функция генерации токена
+def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    if expires_delta:
+        expire = datetime.datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
-# Имитация БД (временно, пока не подключишь Postgres/SQLite)
-fake_users_db = {}
-
+# Регистрация
 @router.post("/register")
-async def register(user: UserAuth):
-    if user.email in fake_users_db:
-        raise HTTPException(status_code=400, detail="Email already registered")
+def register(user: UserAuth):
+    if user.email in users_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Email already registered"
+        )
     
-    hashed = hash_password(user.password)
-    fake_users_db[user.email] = {"email": user.email, "hashed_password": hashed}
-    return {"message": "User created successfully"}
+    try:
+        # Хэшируем пароль чистым bcrypt напрямую без passlib
+        password_bytes = user.password.encode('utf-8')
+        salt = bcrypt.gensalt()
+        hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+        
+        users_db[user.email] = {
+            "email": user.email,
+            "hashed_password": hashed_password
+        }
+        return {"status": "success", "message": "User created successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Bcrypt error: {str(e)}"
+        )
 
+# Авторизация (Вход)
 @router.post("/login")
-async def login(user: UserAuth):
-    db_user = fake_users_db.get(user.email)
-    if not db_user or not verify_password(user.password, db_user["hashed_password"]):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+def login(user: UserAuth):
+    if user.email not in users_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Incorrect email or password"
+        )
     
-    access_token = create_access_token(data={"sub": user.email})
+    db_user = users_db[user.email]
+    
+    try:
+        # Сверяем пароли чистым bcrypt
+        user_password_bytes = user.password.encode('utf-8')
+        db_password_bytes = db_user["hashed_password"].encode('utf-8')
+        
+        if not bcrypt.checkpw(user_password_bytes, db_password_bytes):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Incorrect email or password"
+            )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Bcrypt verify error: {str(e)}"
+        )
+        
+    # Если всё ок — генерируем JWT-токен
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
     return {"access_token": access_token, "token_type": "bearer"}
