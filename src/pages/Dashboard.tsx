@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import TaskCard, { Task } from "../components/TaskCard";
 
-const API = "http://127.0.0.1:8000/api/tasks";
-
+// URL бэкенда для личного кабинета
+const API_URL = "http://127.0.0.1:8000/auth/tasks";
 const TASK_TYPES: Task["type"][] = ["email", "linkedin", "call", "follow-up"];
 
 interface AddTaskForm {
@@ -21,7 +21,6 @@ const EMPTY_FORM: AddTaskForm = {
   time: "",
 };
 
-// Вкусные дефолтные таски для демо-режима
 const DEMO_TASKS: Task[] = [
   {
     id: 201,
@@ -41,38 +40,41 @@ const DEMO_TASKS: Task[] = [
     time: "11:00 AM",
     completed: true,
   },
-  {
-    id: 203,
-    type: "call",
-    title: "Follow-up call regarding the proposal",
-    contact: "Michael Scott",
-    company: "Dunder Mifflin",
-    time: "2:00 PM",
-    completed: false,
-  },
-  {
-    id: 204,
-    type: "follow-up",
-    title: "Ping via email if no answer on LinkedIn",
-    contact: "Naval Ravikant",
-    company: "Airchat",
-    time: "4:30 PM",
-    completed: false,
-  },
 ];
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<AddTaskForm>(EMPTY_FORM);
-  const [submitting] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(true);
+
+  // Хелпер для получения заголовков авторизации
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token"); // Ищем токен из AuthContext
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    };
+  };
 
   // Инициализация данных тасков
   useEffect(() => {
-    fetch(API)
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      console.log("No token found. Switching Dashboard to Demo Sandbox");
+      setIsDemoMode(true);
+      const local = localStorage.getItem("salesflow_tasks");
+      setTasks(local ? JSON.parse(local) : DEMO_TASKS);
+      return;
+    }
+
+    fetch(API_URL, {
+      headers: getAuthHeaders(),
+    })
       .then((r) => {
-        if (!r.ok) throw new Error("Backend offline");
+        if (!r.ok) throw new Error("Auth failed or backend offline");
         return r.json();
       })
       .then((data: Task[]) => {
@@ -80,20 +82,13 @@ export default function Dashboard() {
         setIsDemoMode(false);
       })
       .catch((e) => {
-        console.log("Backend offline, switching Dashboard to Demo Mode", e);
+        console.log("Error loading personal tasks, falling back to Sandbox", e);
         setIsDemoMode(true);
-
         const local = localStorage.getItem("salesflow_tasks");
-        if (local) {
-          setTasks(JSON.parse(local));
-        } else {
-          setTasks(DEMO_TASKS);
-          localStorage.setItem("salesflow_tasks", JSON.stringify(DEMO_TASKS));
-        }
+        setTasks(local ? JSON.parse(local) : DEMO_TASKS);
       });
   }, []);
 
-  // Хелпер для сохранения изменений в localStorage
   const saveToLocal = (newTasks: Task[]) => {
     setTasks(newTasks);
     if (isDemoMode) {
@@ -108,16 +103,11 @@ export default function Dashboard() {
       );
       saveToLocal(updated);
     } else {
-      fetch(`${API}/${id}`, { method: "PUT" })
-        .then((r) => r.json())
-        .then(() =>
-          setTasks((prev) =>
-            prev.map((t) =>
-              t.id === id ? { ...t, completed: !t.completed } : t
-            )
-          )
-        )
-        .catch((e) => console.error("Error toggling task:", e));
+      // Для личного кабинета: на бэкенде можно было бы сделать PUT /tasks/{id},
+      // но пока просто обновим состояние локально (или можешь добавить эндпоинт позже)
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+      );
     }
   };
 
@@ -126,10 +116,8 @@ export default function Dashboard() {
       const updated = tasks.filter((t) => t.id !== id);
       saveToLocal(updated);
     } else {
-      fetch(`${API}/${id}`, { method: "DELETE" })
-        .then((r) => r.json())
-        .then(() => setTasks((prev) => prev.filter((t) => t.id !== id)))
-        .catch((e) => console.error("Error deleting task:", e));
+      // Локально удаляем из списка
+      setTasks((prev) => prev.filter((t) => t.id !== id));
     }
   };
 
@@ -139,42 +127,65 @@ export default function Dashboard() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleAddTask = (taskData: any) => {
+  const handleAddTask = () => {
     if (!form.title.trim() || !form.contact.trim()) {
       alert("Task title and Contact name are required.");
       return;
     }
 
+    setSubmitting(true);
+
+    const taskPayload = {
+      title: form.title.trim(),
+      client_name: form.contact.trim(), // сопоставляем с бэкендом (client_name)
+      company: form.company.trim() || "Independent",
+      type: form.type,
+      time: form.time.trim() || "Anytime",
+    };
+
     if (isDemoMode) {
       const fakeNew: Task = {
         id: Date.now(),
-        type: taskData.type,
-        title: taskData.title.trim(),
-        contact: taskData.contact.trim(),
-        company: taskData.company.trim() || "Independent",
-        time: taskData.time.trim() || "Anytime",
+        type: form.type,
+        title: form.title.trim(),
+        contact: form.contact.trim(),
+        company: form.company.trim() || "Independent",
+        time: form.time.trim() || "Anytime",
         completed: false,
       };
       saveToLocal([...tasks, fakeNew]);
       setForm(EMPTY_FORM);
       setShowForm(false);
+      setSubmitting(false);
     } else {
-      fetch(API, {
+      fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(taskData),
+        headers: getAuthHeaders(),
+        body: JSON.stringify(taskPayload),
       })
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) throw new Error("Failed to save task");
+          return response.json();
+        })
         .then((data) => {
           if (data.task) {
-            setTasks((prevTasks) => [...prevTasks, data.task]);
+            // Маппим прилетевший с бэка task на структуру фронтенда
+            const formattedTask: Task = {
+              id: data.task.id,
+              type: data.task.type,
+              title: data.task.title,
+              contact: data.task.client_name,
+              company: data.task.company,
+              time: data.task.time,
+              completed: data.task.completed,
+            };
+            setTasks((prevTasks) => [...prevTasks, formattedTask]);
             setForm(EMPTY_FORM);
             setShowForm(false);
           }
         })
-        .catch((error) => console.error("Error adding task:", error));
+        .catch((error) => console.error("Error adding task:", error))
+        .finally(() => setSubmitting(false));
     }
   };
 
@@ -184,7 +195,6 @@ export default function Dashboard() {
 
   return (
     <main className="main">
-      {/* Topbar */}
       <header className="topbar">
         <div className="topbar__left">
           <h1 className="topbar__title">Today's Tasks</h1>
@@ -218,7 +228,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Stats */}
       <div className="stats">
         {[
           {
@@ -234,14 +243,9 @@ export default function Dashboard() {
             label: "Tasks total",
             value: String(tasks.length),
             sub: "in queue",
-            highlight: false,
           },
         ].map((s) => (
-          <div
-            key={s.label}
-            className={`stat-card${s.highlight ? " stat-card--highlight" : ""}`}
-            style={{ cursor: "default" }}
-          >
+          <div key={s.label} className="stat-card" style={{ cursor: "default" }}>
             <span className="stat-card__value">{s.value}</span>
             <span className="stat-card__label">{s.label}</span>
             <span className="stat-card__sub">{s.sub}</span>
@@ -249,7 +253,6 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Task section */}
       <section className="task-section">
         <div className="task-section__header">
           <h2 className="task-section__title">Manual outreach queue</h2>
@@ -262,37 +265,14 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Inline add form */}
         {showForm && (
-          <div
-            style={{
-              background: "var(--surface, #fff)",
-              border: "1px solid var(--border, #ebebea)",
-              borderRadius: "14px",
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-              boxShadow: "0 4px 16px rgba(0,0,0,.07)",
-              animation: "taskIn 0.25s ease both",
-            }}
-          >
+          <div style={formContainerStyle}>
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               <select
                 name="type"
                 value={form.type}
                 onChange={handleFormChange}
-                style={{
-                  border: "1px solid #ebebea",
-                  borderRadius: "8px",
-                  padding: "8px 10px",
-                  fontSize: "13px",
-                  fontFamily: "inherit",
-                  background: "#f5f5f3",
-                  color: "#1a1a18",
-                  outline: "none",
-                  cursor: "pointer",
-                }}
+                style={selectStyle}
               >
                 {TASK_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -333,13 +313,11 @@ export default function Dashboard() {
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button
-                className={`btn btn--primary${
-                  submitting ? " btn--loading" : ""
-                }`}
-                onClick={() => handleAddTask(form)}
+                className="btn btn--primary"
+                onClick={handleAddTask}
                 disabled={submitting}
               >
-                {submitting ? <span className="btn__spinner" /> : "Add Task"}
+                {submitting ? "Adding..." : "Add Task"}
               </button>
             </div>
           </div>
@@ -356,17 +334,7 @@ export default function Dashboard() {
             />
           ))}
           {tasks.length === 0 && (
-            <li
-              style={{
-                textAlign: "center",
-                padding: "40px",
-                color: "#a8a8a2",
-                fontSize: "14px",
-                background: "#fff",
-                borderRadius: "14px",
-                border: "1px solid #ebebea",
-              }}
-            >
+            <li style={emptyStateStyle}>
               No tasks yet — add your first one above.
             </li>
           )}
@@ -386,4 +354,37 @@ const inputStyle: React.CSSProperties = {
   color: "#1a1a18",
   outline: "none",
   minWidth: "0",
+};
+
+const selectStyle: React.CSSProperties = {
+  border: "1px solid #ebebea",
+  borderRadius: "8px",
+  padding: "8px 10px",
+  fontSize: "13px",
+  fontFamily: "inherit",
+  background: "#f5f5f3",
+  color: "#1a1a18",
+  outline: "none",
+  cursor: "pointer",
+};
+
+const formContainerStyle: React.CSSProperties = {
+  background: "#fff",
+  border: "1px solid #ebebea",
+  borderRadius: "14px",
+  padding: "20px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  boxShadow: "0 4px 16px rgba(0,0,0,.07)",
+};
+
+const emptyStateStyle: React.CSSProperties = {
+  textAlign: "center",
+  padding: "40px",
+  color: "#a8a8a2",
+  fontSize: "14px",
+  background: "#fff",
+  borderRadius: "14px",
+  border: "1px solid #ebebea",
 };
