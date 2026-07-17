@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ToastProvider } from "./сontext/ToastContext";
 import FeedbackModal from "./components/FeedbackModal/FeedbackModal";
-import { AuthModal } from "./components/AuthModal"; // 1. Импортируем модалку авторизации
+import { AuthModal } from "./components/AuthModal"; 
 import Analytics from "./pages/Analytics";
 import Sequences from "./pages/Sequence";
+import Profile from "./pages/Profile"; // Страница профиля уже импортирована!
 import "./App.scss";
 
 import Sidebar, { PageKey } from "./components/Sidebar";
@@ -45,6 +46,8 @@ export default function App() {
         return <Contacts />;
       case "Analytics":
         return <Analytics />;
+      case "Profile": // ← Добавили обработку вкладки Профиля
+        return <Profile />;
     }
   };
 
@@ -77,7 +80,6 @@ export default function App() {
         onClose={() => setIsFeedbackOpen(false)}
       />
 
-      {/* 2. Добавляем модалку авторизации сюда */}
       {isAuthOpen && (
         <AuthModal onClose={() => setIsAuthOpen(false)} />
       )}

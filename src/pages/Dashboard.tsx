@@ -103,11 +103,22 @@ export default function Dashboard() {
       );
       saveToLocal(updated);
     } else {
-      // Для личного кабинета: на бэкенде можно было бы сделать PUT /tasks/{id},
-      // но пока просто обновим состояние локально (или можешь добавить эндпоинт позже)
-      setTasks((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-      );
+      // Для личного кабинета шлём PATCH запрос на бэкенд
+      fetch(`http://127.0.0.1:8000/auth/tasks/${id}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to toggle task on backend");
+          return res.json();
+        })
+        .then((data) => {
+          // Обновляем стейт на фронте, когда бэк подтвердил сохранение
+          setTasks((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, completed: data.task.completed } : t))
+          );
+        })
+        .catch((e) => console.error("Error toggling task:", e));
     }
   };
 

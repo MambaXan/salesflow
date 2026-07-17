@@ -1,5 +1,7 @@
 import datetime
 from datetime import timedelta
+import json
+import os
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, EmailStr
@@ -12,26 +14,48 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-# Базы данных в памяти
-users_db = {}
-tasks_db = {}
+# Пути к файлам сохранения
+USERS_FILE = "users.json"
+TASKS_FILE = "tasks.json"
+
+# Функции для работы с файлами
+def load_data(file_path, default_value):
+    if not os.path.exists(file_path):
+        return default_value
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default_value
+
+def save_data(file_path, data):
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+# Загружаем базу данных при старте сервера
+users_db = load_data(USERS_FILE, {})
+tasks_db = load_data(TASKS_FILE, {})
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# --- СХЕМЫ ДАННЫХ (Классы Pydantic всегда в самом верху) ---
+# --- СХЕМЫ ДАННЫХ ---
 
 class TaskCreate(BaseModel):
     title: str
     client_name: str
     company: str
-    type: str  # 'Email', 'Call', 'Follow-up'
+    type: str
     time: str
 
 class UserAuth(BaseModel):
     email: EmailStr
     password: str
 
-# --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ДЕПЕНДЕНСИ (Должны быть выше роутов) ---
+class UserUpdate(BaseModel):
+    first_name: str
+    last_name: str
+
+# --- ДЕПЕНДЕНСИ ---
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -62,7 +86,31 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# --- РОУТЫ (Используют функции, объявленные выше) ---
+# --- РОУТЫ ---
+
+@router.get("/me")
+def get_current_user_info(current_user: str = Depends(get_current_user)):
+    user_tasks = tasks_db.get(current_user, [])
+    total_tasks = len(user_tasks)
+    completed_tasks = len([t for t in user_tasks if t.get("completed")])
+    user_data = users_db.get(current_user, {})
+    
+    return {
+        "email": current_user,
+        "first_name": user_data.get("first_name", ""),
+        "last_name": user_data.get("last_name", ""),
+        "total_tasks": total_tasks,
+        "completed_tasks": completed_tasks
+    }
+
+@router.post("/me")
+def update_user_profile(data: UserUpdate, current_user: str = Depends(get_current_user)):
+    if current_user in users_db:
+        users_db[current_user]["first_name"] = data.first_name
+        users_db[current_user]["last_name"] = data.last_name
+        save_data(USERS_FILE, users_db)  # Сохраняем изменения профиля
+        return {"status": "success", "message": "Profile updated"}
+    raise HTTPException(status_code=404, detail="User not found")
 
 @router.get("/tasks")
 def get_tasks(current_user: str = Depends(get_current_user)):
@@ -86,6 +134,7 @@ def add_task(task: TaskCreate, current_user: str = Depends(get_current_user)):
     }
     
     tasks_db[current_user].append(new_task)
+    save_data(TASKS_FILE, tasks_db)  # Сохраняем таски на диск
     return {"status": "success", "task": new_task}
 
 @router.post("/register")
@@ -102,8 +151,11 @@ def register(user: UserAuth):
         
         users_db[user.email] = {
             "email": user.email,
-            "hashed_password": hashed_password
+            "hashed_password": hashed_password,
+            "first_name": "",
+            "last_name": ""
         }
+        save_data(USERS_FILE, users_db)  # Сохраняем нового юзера на диск
         return {"status": "success", "message": "User created successfully"}
     except Exception as e:
         raise HTTPException(
@@ -140,3 +192,17 @@ def login(user: UserAuth):
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.patch("/tasks/{task_id}")
+def toggle_task_status(task_id: int, current_user: str = Depends(get_current_user)):
+    if current_user not in tasks_db:
+        raise HTTPException(status_code=404, detail="No tasks found for user")
+        
+    # Ищем задачу по id
+    for task in tasks_db[current_user]:
+        if task["id"] == task_id:
+            task["completed"] = not task["completed"] # инвертируем статус
+            save_data(TASKS_FILE, tasks_db) # сохраняем в JSON!
+            return {"status": "success", "task": task}
+            
+    raise HTTPException(status_code=404, detail="Task not found")
