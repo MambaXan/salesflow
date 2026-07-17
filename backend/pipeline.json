@@ -1,0 +1,20 @@
+{
+    "boobslover@gmail.com": [
+        {
+            "id": 1,
+            "client_name": "asdsfs",
+            "company": "sdfsdf",
+            "value": 1111,
+            "stage": "Closed Won",
+            "date": "2026-07-17"
+        },
+        {
+            "id": 2,
+            "client_name": "adsd",
+            "company": "asasd",
+            "value": 111111,
+            "stage": "Closed Won",
+            "date": "2026-07-17"
+        }
+    ]
+}

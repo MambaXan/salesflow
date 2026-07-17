@@ -35,8 +35,6 @@ const EMPTY_FORM: AddDealForm = {
   status: "Lead",
 };
 
-const API = "http://127.0.0.1:8000/api/deals";
-
 const DEMO_DEALS: Deal[] = [
   { id: 301, contact_name: "Marc Benioff", company: "Salesforce", value: 12500, date: "2026-06-01", status: "Lead" },
   { id: 302, contact_name: "Brian Chesky", company: "Airbnb", value: 45000, date: "2026-06-03", status: "Lead" },
@@ -62,27 +60,47 @@ export default function Pipeline() {
   const [form, setForm] = useState<AddDealForm>(EMPTY_FORM);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    };
+  };
+
   useEffect(() => {
-    fetch(API)
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setIsDemoMode(true);
+      const local = localStorage.getItem("salesflow_deals");
+      setDeals(local ? JSON.parse(local) : DEMO_DEALS);
+      return;
+    }
+
+    fetch("http://127.0.0.1:8000/auth/pipeline", {
+      headers: getAuthHeaders(),
+    })
       .then((r) => {
-        if (!r.ok) throw new Error("Backend offline");
+        if (!r.ok) throw new Error("Backend offline or unauthorized");
         return r.json();
       })
-      .then((data: Deal[]) => {
-        setDeals(data);
+      .then((backendLeads: any[]) => {
+        const mappedDeals: Deal[] = backendLeads.map((b: any) => ({
+          id: b.id,
+          contact_name: b.client_name,
+          company: b.company,
+          value: b.value,
+          date: b.date,
+          status: b.stage
+        }));
+        setDeals(mappedDeals);
         setIsDemoMode(false);
       })
       .catch((e) => {
-        console.log("Backend offline, switching Pipeline to Demo Mode", e);
+        console.log("Switching Pipeline to Demo Mode", e);
         setIsDemoMode(true);
-
         const local = localStorage.getItem("salesflow_deals");
-        if (local) {
-          setDeals(JSON.parse(local));
-        } else {
-          setDeals(DEMO_DEALS);
-          localStorage.setItem("salesflow_deals", JSON.stringify(DEMO_DEALS));
-        }
+        setDeals(local ? JSON.parse(local) : DEMO_DEALS);
       });
   }, []);
 
@@ -117,23 +135,43 @@ export default function Pipeline() {
       setForm(EMPTY_FORM);
       setShowForm(false);
     } else {
-      fetch(API, {
+      fetch("http://127.0.0.1:8000/auth/pipeline", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newDealData),
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          client_name: newDealData.contact_name,
+          company: newDealData.company,
+          value: newDealData.value,
+          stage: newDealData.status
+        }),
       })
-        .then((r) => r.json())
+        .then(async (r) => {
+          if (!r.ok) {
+            const errorText = await r.text();
+            console.error("Сервер ответил ошибкой:", errorText);
+            throw new Error(`Код: ${r.status}. Текст: ${errorText}`);
+          }
+          return r.json();
+        })
         .then((data) => {
-          if (data.deal) {
-            setDeals((prev) => [...prev, data.deal]);
+          if (data.lead) {
+            const addedDeal: Deal = {
+              id: data.lead.id,
+              contact_name: data.lead.client_name,
+              company: data.lead.company,
+              value: data.lead.value,
+              date: data.lead.date,
+              status: data.lead.stage
+            };
+            setDeals((prev) => [...prev, addedDeal]);
             addToast(`Deal for ${newDealData.company} successfully created!`, "success");
             setForm(EMPTY_FORM);
             setShowForm(false);
           }
         })
         .catch((e) => {
-          console.error("Error adding deal:", e);
-          addToast("Failed to create deal. Try again.", "error");
+          console.error("Полный лог ошибки добавления сделки:", e);
+          addToast("Failed to create deal. Check console.", "error");
         });
     }
   };
@@ -155,12 +193,15 @@ export default function Pipeline() {
         addToast(`Moved to ${next}`);
       }
     } else {
-      fetch(`${API}/${id}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: next }),
+      fetch(`http://127.0.0.1:8000/auth/pipeline/${id}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ stage: next }),
       })
-        .then((r) => r.json())
+        .then((r) => {
+          if (!r.ok) throw new Error("Failed to move deal");
+          return r.json();
+        })
         .then(() => {
           setDeals((prev) =>
             prev.map((d) => (d.id === id ? { ...d, status: next } : d))
@@ -265,7 +306,7 @@ export default function Pipeline() {
           padding: "16px 20px",
           marginBottom: "24px",
           display: "flex",
-          justifyContent: "space-between", // Исправили на camelCase и строку
+          justifyContent: "space-between",
           alignItems: "center",
           boxShadow: "0 2px 8px rgba(59, 130, 246, 0.05)"
         }}>
@@ -285,7 +326,7 @@ export default function Pipeline() {
             onClick={() => {
               localStorage.removeItem("salesflow_deals");
               setDeals(DEMO_DEALS);
-              addToast("Sandbox reset to default data!", "success"); // Заменили "info" на валидный "success"
+              addToast("Sandbox reset to default data!", "success");
             }}
             style={{
               background: "#ffffff",
